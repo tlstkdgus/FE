@@ -6,12 +6,20 @@ import { GrPowerCycle } from "react-icons/gr";
 
 const NavBar = styled.div`
   display: flex;
-  width: 100%;
+  width: var(--content-width, 100%);
+  height: auto;
+  max-width: 440px;
   padding: 8px 16px;
   justify-content: space-between;
   align-items: center;
   border-top: 1px solid var(--line);
   background: var(--white);
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  margin: 0 auto;
 `;
 
 const NavItem = styled.div`
