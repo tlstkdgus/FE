@@ -12,19 +12,17 @@ import Setting from "./pages/Setting";
 
 const RouterComponent = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Setting />} />
-        <Route path="/main" element={<Main />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/create" element={<Create />} />
-        <Route path="/essential" element={<Essential />} />
-        <Route path="/exclude" element={<Exclude />} />
-        <Route path="/mypage" element={<MyPage />} />
-        <Route path="/retake" element={<Retake />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Setting />} />
+      <Route path="/main" element={<Main />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/create" element={<Create />} />
+      <Route path="/essential" element={<Essential />} />
+      <Route path="/exclude" element={<Exclude />} />
+      <Route path="/mypage" element={<MyPage />} />
+      <Route path="/retake" element={<Retake />} />
+    </Routes>
   );
 };
 

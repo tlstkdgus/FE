@@ -3,6 +3,7 @@ import RouterComponent from "./router";
 import { GlobalStyle } from "./styles/GlobalStyle";
 import styled from "styled-components";
 import Mobile from "./styles/Mobile";
+import { BrowserRouter } from "react-router-dom";
 
 const Container = styled.div`
   height: 100%;
@@ -16,9 +17,11 @@ function App() {
   return (
     <Container>
       <GlobalStyle />
-      <Mobile>
-        <RouterComponent />
-      </Mobile>
+      <BrowserRouter>
+        <Mobile>
+          <RouterComponent />
+        </Mobile>
+      </BrowserRouter>
     </Container>
   );
 }
