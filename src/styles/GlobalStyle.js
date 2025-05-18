@@ -210,7 +210,7 @@ h4,
     border: none;
     outline: none;
     &::placeholder {
-      color: var(--gray-400);
+      color: var(--subtext);
     }
   }
 `;
