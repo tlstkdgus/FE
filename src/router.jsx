@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Main from "./pages/Main";
 import Login from "./pages/Login";
 import Essential from "./pages/Essential";
@@ -8,6 +8,8 @@ import MyPage from "./pages/MyPage";
 import Retake from "./pages/Retake";
 import SignUp from "./pages/SignUp";
 import Setting from "./pages/Setting";
+import SignUpComplete from "./pages/SignUpComplete";
+
 import Create from "./pages/Create";
 import Day from "./pages/Day";
 import Credit from "./pages/Credit";
@@ -21,6 +23,7 @@ const RouterComponent = () => {
       <Route path="/main" element={<Main />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/signup-complete" element={<SignUpComplete />} />
       <Route path="/essential" element={<Essential />} />
       <Route path="/exclude" element={<Exclude />} />
       <Route path="/mypage" element={<MyPage />} />
