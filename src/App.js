@@ -4,6 +4,7 @@ import { GlobalStyle } from "./styles/GlobalStyle";
 import styled from "styled-components";
 import Mobile from "./styles/Mobile";
 import { BrowserRouter } from "react-router-dom";
+import { ScheduleProvider } from "./context/ScheduleContext";
 
 const Container = styled.div`
   height: 100%;
@@ -18,9 +19,11 @@ function App() {
     <Container>
       <GlobalStyle />
       <BrowserRouter>
-        <Mobile>
-          <RouterComponent />
-        </Mobile>
+        <ScheduleProvider>
+          <Mobile>
+            <RouterComponent />
+          </Mobile>
+        </ScheduleProvider>
       </BrowserRouter>
     </Container>
   );
