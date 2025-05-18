@@ -39,9 +39,6 @@ export default function Setting() {
       <ChooseButton onClick={() => gotoPage("/signup")}>
         회원가입 페이지
       </ChooseButton>
-      <ChooseButton onClick={() => gotoPage("/create")}>
-        시간표 생성 페이지
-      </ChooseButton>
       <ChooseButton onClick={() => gotoPage("/essential")}>
         필수 과목 설정 페이지
       </ChooseButton>
@@ -53,6 +50,24 @@ export default function Setting() {
       </ChooseButton>
       <ChooseButton onClick={() => gotoPage("/retake")}>
         재수강 과목 설정 페이지
+      </ChooseButton>
+      <ChooseButton onClick={() => gotoPage("/create")}>
+        시간표 생성 페이지
+      </ChooseButton>
+      <ChooseButton onClick={() => gotoPage("/day")}>
+        시간표 페이지
+      </ChooseButton>
+      <ChooseButton onClick={() => gotoPage("/credit")}>
+        학점 설정 페이지
+      </ChooseButton> 
+      <ChooseButton onClick={() => gotoPage("/combination")}>
+        시간표 조합 페이지
+      </ChooseButton>
+      <ChooseButton onClick={() => gotoPage("/detailedcredit")}>
+        학점 상세 설정 페이지
+      </ChooseButton>
+      <ChooseButton onClick={() => gotoPage("/result")}>
+        시간표 결과 페이지
       </ChooseButton>
     </PageContainer>
   );
