@@ -1,9 +1,10 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { BsExclamationCircle } from "react-icons/bs";
+import Timetable from "../Components/TimeTable";
 
 const MainContainer = styled.div`
   width: 100%;
-  min-height: 100vh;
 `;
 
 const TopSpace = styled.div`
@@ -18,6 +19,7 @@ const Card = styled.div`
   margin-bottom: 28px;
   margin-left: 16px;
   margin-right: 16px;
+  margin-top: 16px;
   width: calc(100% - 32px);
   display: flex;
   flex-direction: column;
@@ -25,13 +27,19 @@ const Card = styled.div`
 `;
 
 const CenterCard = styled(Card)`
-  align-items: center;
-  text-align: center;
-  margin-top: 0;
-  min-height: 310px;
-  padding-top: 36px;
-  padding-bottom: 36px;
-  justify-content: center;
+display: flex;
+height: 350px;
+min-height: 350px;
+padding: 32px 16px;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+gap: 32px;
+align-self: stretch;
+border-radius: 10px;
+border: 2px solid var(--Brand, #305FF8);
+background: var(--White, #FFF);
+
 `;
 
 const Title = styled.div`
@@ -76,11 +84,15 @@ const ExclamationMark = styled.div`
 `;
 
 const GuideText = styled.div`
-  color: var(--black);
-  font-size: var(--body-default);
-  font-weight: 400;
-  margin-bottom: 18px;
-  line-height: 1.6;
+color: var(--Black, #111);
+text-align: center;
+/* Body/Large */
+font-family: Pretendard;
+font-size: 18px;
+font-style: normal;
+font-weight: 400;
+line-height: 140%; /* 25.2px */
+letter-spacing: -0.45px;
 `;
 
 const Button = styled.button`
@@ -113,9 +125,11 @@ export default function Main() {
     credits: "109/134",
   };
 
+  // localStorage에서 시간표 불러오기
+  const savedTimetable = JSON.parse(localStorage.getItem("finalTimetable") || "null");
+
   return (
     <MainContainer>
-      <TopSpace />
       <Card>
         <Title>
           반갑습니다 <Highlight>{user.name}</Highlight> 회원님
@@ -127,16 +141,30 @@ export default function Main() {
           <Info>취득 학점 : {user.credits}</Info>
         </InfoList>
       </Card>
-      <CenterCard>
-        <ExclamationCircle>
-          <ExclamationMark>!</ExclamationMark>
-        </ExclamationCircle>
-        <GuideText>
-          아직 생성된 시간표가 없어요!<br />
-          시간표를 생성하러 가 볼까요?
-        </GuideText>
-        <Button onClick={() => navigate("/create")}>시간표 생성하기 <span style={{fontSize: '18px', fontWeight: 700}}>&rarr;</span></Button>
-      </CenterCard>
+      {savedTimetable ? (
+        <Card>
+          <Title>나의 시간표</Title>
+          <Timetable data={savedTimetable} />
+          <Button
+            style={{ marginTop: 16, background: "#eee", color: "#305FF8", border: "1.5px solid #305FF8" }}
+            onClick={() => {
+              localStorage.removeItem("finalTimetable");
+              window.location.reload();
+            }}
+          >
+            시간표 삭제
+          </Button>
+        </Card>
+      ) : (
+        <CenterCard>
+          <BsExclamationCircle style = {{width: 64, height: 64}}/>
+          <GuideText>
+            아직 생성된 시간표가 없어요!<br />
+            시간표를 생성하러 가 볼까요?
+          </GuideText>
+          <Button onClick={() => navigate("/create")}>시간표 생성하기 <span style={{fontSize: '18px', fontWeight: 700}}>&rarr;</span></Button>
+        </CenterCard>
+      )}
     </MainContainer>
   );
 }
