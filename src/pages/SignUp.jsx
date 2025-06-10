@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
@@ -142,8 +142,41 @@ const Button = styled.button`
 
 export default function SignUp() {
   const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    student_id: "",
+    password: "",
+    name: "",
+    college: "",
+    major: "",
+    doubleMajorType: "",
+    double_major: "",
+    modules: [],
+    grade: 0,
+    semester: 0,
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // API 호출을 위한 데이터 준비
+    const submitData = {
+      ...formData,
+      grade: parseInt(formData.grade) || 0,
+      semester: parseInt(formData.semester) || 0,
+    };
+
+    console.log("회원가입 데이터:", submitData);
+
+    // TODO: API 호출 구현
     // 회원가입 성공 시
     navigate("/signup-complete");
   };
@@ -155,28 +188,82 @@ export default function SignUp() {
           Scheduly의 서비스를 이용하기 위해
           <br />
           회원가입을 진행해 주세요
-        </Description>
+        </Description>{" "}
         <Form onSubmit={handleSubmit}>
           <Field>
-            <Label htmlFor="studentId">ID(학번)</Label>
-            <Input id="studentId" placeholder="학번을 입력해 주세요" />
+            <Label htmlFor="student_id">ID(학번)</Label>
+            <Input
+              id="student_id"
+              name="student_id"
+              value={formData.student_id}
+              onChange={handleInputChange}
+              placeholder="학번을 입력해 주세요"
+              required
+            />
           </Field>
           <Field>
             <Label htmlFor="password">PW</Label>
             <Input
               id="password"
+              name="password"
               type="password"
+              value={formData.password}
+              onChange={handleInputChange}
               placeholder="영문/대소문자/특수문자 중 3가지 이상 조합, 8~16자"
+              required
             />
           </Field>
           <Field>
             <Label htmlFor="name">성함</Label>
-            <Input id="name" placeholder="" />
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="이름을 입력해 주세요"
+              required
+            />
+          </Field>
+          <Field>
+            <Label htmlFor="college">단과대학</Label>
+            <CustomSelectWrapper>
+              <Select
+                id="college"
+                name="college"
+                value={formData.college}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="" disabled>
+                  단과대학을 선택하세요
+                </option>
+                <option value="경상대학">경상대학</option>
+                <option value="통번역대학">통번역대학</option>
+                <option value="공과대학">공과대학</option>
+                <option value="자연과학대학">자연과학대학</option>
+                <option value="국제지역대학">국제지역대학</option>
+                <option value="인문대학">인문대학</option>
+                <option value="국가전략언어대학"></option>
+                <option value="융합인재대학">융합인재대학</option>
+                <option value="Culture&Technology융합대학">
+                  Culture&Technology 융합대학
+                </option>
+                <option value="AI융합대학">AI융합대학</option>
+                <option value="바이오메디컬공학부">바이오메디컬공학부</option>
+              </Select>
+              <SelectArrow />
+            </CustomSelectWrapper>
           </Field>
           <Field>
             <Label htmlFor="major">전공</Label>
             <CustomSelectWrapper>
-              <Select id="major" defaultValue="">
+              <Select
+                id="major"
+                name="major"
+                value={formData.major}
+                onChange={handleInputChange}
+                required
+              >
                 <option value="" disabled>
                   전공을 선택하세요
                 </option>
@@ -191,28 +278,84 @@ export default function SignUp() {
             </CustomSelectWrapper>
           </Field>
           <Field>
-            <Label htmlFor="minor">이중 / 부전공</Label>
+            <Label htmlFor="doubleMajorType">이중 / 부전공 타입</Label>
             <CustomSelectWrapper>
-              <Select id="minor" defaultValue="">
+              <Select
+                id="doubleMajorType"
+                name="doubleMajorType"
+                value={formData.doubleMajorType}
+                onChange={handleInputChange}
+                required
+              >
                 <option value="" disabled>
-                  이중/부전공을 선택하세요
+                  타입을 선택하세요
                 </option>
                 <option value="없음">없음</option>
-                <option value="Global Business & Technology전공">
-                  Global Business & Technology전공
-                </option>
-                <option value="러시아학과">러시아학과</option>
-                <option value="언어인지과학과">언어인지과학과</option>
-                {/* 데이터 추가 예정 */}
+                <option value="전공심화">전공심화</option>
+                <option value="이중/부전공">이중/부전공</option>
               </Select>
               <SelectArrow />
             </CustomSelectWrapper>
           </Field>
+          {formData.doubleMajorType === "이중/부전공" && (
+            <Field>
+              <Label htmlFor="double_major">이중 / 부전공</Label>
+              <CustomSelectWrapper>
+                <Select
+                  id="double_major"
+                  name="double_major"
+                  value={formData.double_major}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="" disabled>
+                    이중/부전공을 선택하세요
+                  </option>
+                </Select>
+                <SelectArrow />
+              </CustomSelectWrapper>
+            </Field>
+          )}
+          {formData.double_major === "융합인재대학" && (
+            <Field>
+              <Label htmlFor="modules">모듈 선택</Label>
+              <CustomSelectWrapper>
+                <Select
+                  id="modules"
+                  name="modules"
+                  value={formData.modules[0] || ""}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      modules: e.target.value ? [e.target.value] : [],
+                    }));
+                  }}
+                >
+                  <option value="" disabled>
+                    모듈을 선택하세요
+                  </option>
+                  <option value="AI융합전공">AI융합전공</option>
+                  <option value="바이오헬스융합전공">바이오헬스융합전공</option>
+                  <option value="미디어아트융합전공">미디어아트융합전공</option>
+                  <option value="글로벌리더십융합전공">
+                    글로벌리더십융합전공
+                  </option>
+                </Select>
+                <SelectArrow />
+              </CustomSelectWrapper>
+            </Field>
+          )}{" "}
           <Row>
             <Field style={{ flex: 1 }}>
               <Label htmlFor="grade">학년</Label>
               <CustomSelectWrapper>
-                <Select id="grade" defaultValue="">
+                <Select
+                  id="grade"
+                  name="grade"
+                  value={formData.grade}
+                  onChange={handleInputChange}
+                  required
+                >
                   <option value="" disabled>
                     학년
                   </option>
@@ -227,7 +370,13 @@ export default function SignUp() {
             <Field style={{ flex: 1 }}>
               <Label htmlFor="semester">학기</Label>
               <CustomSelectWrapper>
-                <Select id="semester" defaultValue="">
+                <Select
+                  id="semester"
+                  name="semester"
+                  value={formData.semester}
+                  onChange={handleInputChange}
+                  required
+                >
                   <option value="" disabled>
                     학기
                   </option>

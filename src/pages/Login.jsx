@@ -167,7 +167,7 @@ export default function Login() {
               autoComplete="current-password"
             />
           </Field>
-          <Button type="submit">Login</Button>
+          <Button type="submit" onClick = {() => navigate("/main")}>Login</Button>
         </Form>
         <GoogleButton type="button">
           <GoogleLogo>
