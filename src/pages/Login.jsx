@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import axiosInstance, { setToken } from "../axiosInstance";
 
 const Container = styled.div`
   width: 100%;
@@ -84,6 +85,11 @@ const Button = styled.button`
   margin-top: 32px;
   margin-bottom: 0;
   cursor: pointer;
+
+  &:disabled {
+    background: var(--subtext);
+    cursor: not-allowed;
+  }
 `;
 
 const GoogleButton = styled.button`
@@ -136,9 +142,65 @@ const GoogleLogo = styled.div`
 
 export default function Login() {
   const navigate = useNavigate();
-  const handleSubmit = (e) => {
+
+  const [formData, setFormData] = useState({
+    student_id: "",
+    password: "",
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // 로그인 처리 로직
+    setIsLoading(true);
+
+    try {
+      console.log("로그인 데이터:", formData); // 로그인 API 호출
+      const response = await axiosInstance.post("/auth/login", formData);
+      if (response.status === 200) {
+        console.log("로그인 성공:", response.data);
+
+        // 토큰이 응답에 있다면 저장
+        const token =
+          response.data.accessToken ||
+          response.data.access_token ||
+          response.data.token;
+        if (token) {
+          setToken(token);
+          console.log("토큰 저장 완료");
+        } else {
+          console.warn("응답에서 토큰을 찾을 수 없습니다:", response.data);
+        }
+
+        // 로그인 성공 시 메인 페이지로 이동
+        navigate("/main");
+      }
+    } catch (error) {
+      console.error("로그인 실패:", error);
+
+      if (error.response) {
+        // 서버에서 응답을 받은 경우 (4xx, 5xx 상태코드)
+        const errorMessage =
+          error.response.data?.message || "로그인에 실패했습니다.";
+        alert(errorMessage);
+      } else if (error.request) {
+        // 요청은 전송되었지만 응답을 받지 못한 경우
+        alert("서버와의 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        // 요청 설정 중에 오류가 발생한 경우
+        alert("요청 처리 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
   return (
     <Container>
@@ -148,26 +210,36 @@ export default function Login() {
           Scheduly의 서비스를 이용하기 위해
           <br />
           로그인을 진행해 주세요
-        </Description>
+        </Description>{" "}
         <Form onSubmit={handleSubmit}>
           <Field>
-            <Label htmlFor="id">ID (학번)</Label>
+            <Label htmlFor="student_id">ID (학번)</Label>
             <Input
-              id="id"
+              id="student_id"
+              name="student_id"
+              value={formData.student_id}
+              onChange={handleInputChange}
               placeholder="아이디를 입력해 주세요"
               autoComplete="username"
+              required
             />
           </Field>
           <Field>
-            <Label htmlFor="pw">PW</Label>
+            <Label htmlFor="password">PW</Label>
             <Input
-              id="pw"
+              id="password"
+              name="password"
               type="password"
+              value={formData.password}
+              onChange={handleInputChange}
               placeholder="비밀번호를 입력해 주세요"
               autoComplete="current-password"
+              required
             />
           </Field>
-          <Button type="submit" onClick = {() => navigate("/main")}>Login</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "로그인 중..." : "Login"}
+          </Button>
         </Form>
         <GoogleButton type="button">
           <GoogleLogo>

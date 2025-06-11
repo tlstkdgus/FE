@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../axiosInstance";
 
 const Container = styled.div`
   width: 100%;
@@ -142,7 +143,6 @@ const Button = styled.button`
 
 export default function SignUp() {
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     student_id: "",
     password: "",
@@ -151,34 +151,85 @@ export default function SignUp() {
     major: "",
     doubleMajorType: "",
     double_major: "",
-    modules: [],
-    grade: 0,
-    semester: 0,
+    modules: null,
+    grade: "",
+    semester: "",
   });
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: value,
+      };
 
-  const handleSubmit = (e) => {
+      // doubleMajorType이 변경될 때 관련 필드 초기화
+      if (name === "doubleMajorType") {
+        if (value !== "이중/부전공") {
+          newData.double_major = "";
+          newData.modules = null;
+        }
+      }
+
+      // double_major가 변경될 때 modules 초기화
+      if (name === "double_major" && value !== "융합인재대학") {
+        newData.modules = null;
+      }
+
+      return newData;
+    });
+  };
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // API 호출을 위한 데이터 준비
-    const submitData = {
-      ...formData,
-      grade: parseInt(formData.grade) || 0,
-      semester: parseInt(formData.semester) || 0,
-    };
+    try {
+      // API 호출을 위한 데이터 준비
+      const submitData = {
+        student_id: formData.student_id,
+        password: formData.password,
+        name: formData.name,
+        college: formData.college,
+        major: formData.major,
+        double_major_type:
+          formData.doubleMajorType === "없음" ? null : formData.doubleMajorType,
+        double_major:
+          formData.doubleMajorType === "이중/부전공"
+            ? formData.double_major
+            : null,
+        modules:
+          formData.modules && formData.modules.length > 0
+            ? formData.modules
+            : null,
+        grade: parseInt(formData.grade) || 0,
+        semester: parseInt(formData.semester) || 0,
+      };
 
-    console.log("회원가입 데이터:", submitData);
+      console.log("회원가입 데이터:", submitData);
 
-    // TODO: API 호출 구현
-    // 회원가입 성공 시
-    navigate("/signup-complete");
+      // 회원가입 API 호출
+      const response = await axiosInstance.post("/auth/signup", submitData);
+
+      if (response.status === 200 || response.status === 201) {
+        console.log("회원가입 성공:", response.data);
+        // 회원가입 성공 시
+        navigate("/signup-complete");
+      }
+    } catch (error) {
+      console.error("회원가입 실패:", error);
+
+      if (error.response) {
+        // 서버에서 응답을 받은 경우 (4xx, 5xx 상태코드)
+        const errorMessage =
+          error.response.data?.message || "회원가입에 실패했습니다.";
+        alert(errorMessage);
+      } else if (error.request) {
+        // 요청은 전송되었지만 응답을 받지 못한 경우
+        alert("서버와의 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        // 요청 설정 중에 오류가 발생한 경우
+        alert("요청 처리 중 오류가 발생했습니다.");
+      }
+    }
   };
   return (
     <Container>
@@ -240,16 +291,17 @@ export default function SignUp() {
                 <option value="경상대학">경상대학</option>
                 <option value="통번역대학">통번역대학</option>
                 <option value="공과대학">공과대학</option>
-                <option value="자연과학대학">자연과학대학</option>
+                <option value="자연과학대학">자연과학대학</option>{" "}
                 <option value="국제지역대학">국제지역대학</option>
                 <option value="인문대학">인문대학</option>
-                <option value="국가전략언어대학"></option>
+                <option value="국가전략언어대학">국가전략언어대학</option>
                 <option value="융합인재대학">융합인재대학</option>
                 <option value="Culture&Technology융합대학">
                   Culture&Technology 융합대학
                 </option>
                 <option value="AI융합대학">AI융합대학</option>
                 <option value="바이오메디컬공학부">바이오메디컬공학부</option>
+                <option value="기후변화융합학부">기후변화융합학부</option>
               </Select>
               <SelectArrow />
             </CustomSelectWrapper>
@@ -308,9 +360,24 @@ export default function SignUp() {
                   onChange={handleInputChange}
                   required
                 >
+                  {" "}
                   <option value="" disabled>
                     이중/부전공을 선택하세요
                   </option>
+                  <option value="경상대학">경상대학</option>
+                  <option value="통번역대학">통번역대학</option>
+                  <option value="공과대학">공과대학</option>
+                  <option value="자연과학대학">자연과학대학</option>
+                  <option value="국제지역대학">국제지역대학</option>
+                  <option value="인문대학">인문대학</option>
+                  <option value="국가전략언어대학">국가전략언어대학</option>
+                  <option value="융합인재대학">융합인재대학</option>
+                  <option value="Culture&Technology융합대학">
+                    Culture&Technology 융합대학
+                  </option>
+                  <option value="AI융합대학">AI융합대학</option>
+                  <option value="바이오메디컬공학부">바이오메디컬공학부</option>
+                  <option value="기후변화융합학부">기후변화융합학부</option>
                 </Select>
                 <SelectArrow />
               </CustomSelectWrapper>
@@ -320,14 +387,15 @@ export default function SignUp() {
             <Field>
               <Label htmlFor="modules">모듈 선택</Label>
               <CustomSelectWrapper>
+                {" "}
                 <Select
                   id="modules"
                   name="modules"
-                  value={formData.modules[0] || ""}
+                  value={formData.modules?.[0] || ""}
                   onChange={(e) => {
                     setFormData((prev) => ({
                       ...prev,
-                      modules: e.target.value ? [e.target.value] : [],
+                      modules: e.target.value ? [e.target.value] : null,
                     }));
                   }}
                 >
