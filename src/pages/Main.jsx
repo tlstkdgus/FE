@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { BsExclamationCircle } from "react-icons/bs";
 import { useState, useEffect } from "react";
-import { getToken } from "../axiosInstance";
+import { getToken, getUserInfo } from "../axiosInstance";
 import Timetable from "../Components/TimeTable";
 
 const MainContainer = styled.div`
@@ -176,6 +176,7 @@ const Button = styled.button`
 export default function Main() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState({
     name: "게스트",
     major: "로그인이 필요합니다",
@@ -183,48 +184,136 @@ export default function Main() {
     studentId: "",
     credits: "",
   });
+
   useEffect(() => {
-    const token = getToken();
-    if (token) {
-      setIsLoggedIn(true);
+    const loadUserData = async () => {
+      const token = getToken();
+      if (token) {
+        setIsLoggedIn(true);
+        try {
+          // localStorage에서 userId 가져오기
+          const savedUserData = localStorage.getItem("userData");
+          let userId = null;
 
-      // localStorage에서 사용자 정보 가져오기
-      const savedUserData = localStorage.getItem("userData");
-      const savedCredits = localStorage.getItem("userCredits");
-      const credits = savedCredits
-        ? JSON.parse(savedCredits)
-        : { completed: "109", total: "134" };
+          console.log("🔍 Main.jsx - savedUserData:", savedUserData);
+          if (savedUserData) {
+            const userData = JSON.parse(savedUserData);
+            userId =
+              userData.userId || userData.student_id || userData.studentId;
+            console.log("🔍 Main.jsx - parsed userData:", userData);
+            console.log("🔍 Main.jsx - extracted userId:", userId);
+          }
 
-      if (savedUserData) {
-        const userData = JSON.parse(savedUserData);
-        setUser({
-          name: userData.name || "사용자",
-          major: userData.major || "전공 미설정",
-          subMajor: userData.doubleMajor || "",
-          studentId: userData.studentId || "",
-          credits: `${credits.completed}/${credits.total}`,
-        });
-      } else {
-        // 기본값 설정
-        setUser({
-          name: "신상현",
-          major: "Global Business & Technology 학부",
-          subMajor: "AI융합전공",
-          studentId: "202001896",
-          credits: `${credits.completed}/${credits.total}`,
-        });
+          // 크레딧 정보 가져오기
+          const savedCredits = localStorage.getItem("userCredits");
+          const credits = savedCredits
+            ? JSON.parse(savedCredits)
+            : { completed: "109", total: "134" };
+          if (userId) {
+            console.log("🚀 Main.jsx - API 호출 시작, userId:", userId);
+            // API로 최신 사용자 정보 가져오기
+            const apiUserData = await getUserInfo(userId);
+            console.log("✅ Main.jsx - API 응답 데이터:", apiUserData);
+
+            // API 응답을 기존 형식에 맞게 변환
+            const formattedUser = {
+              name: apiUserData.name || "사용자",
+              major: apiUserData.major || "전공 미설정",
+              subMajor: apiUserData.doubleMajor || "",
+              studentId: apiUserData.studentId,
+              credits: `${credits.completed}/${credits.total}`,
+            };
+            console.log("🔄 Main.jsx - 변환된 사용자 데이터:", formattedUser);
+
+            setUser(formattedUser); // localStorage에도 업데이트된 정보 저장
+            const updatedUserData = {
+              userId: userId, // API 호출에 사용한 userId 저장
+              name: apiUserData.name,
+              student_id: apiUserData.studentId,
+              college: apiUserData.college,
+              major: apiUserData.major,
+              doubleMajorType: apiUserData.doubleMajorType,
+              double_major: apiUserData.doubleMajor,
+              modules: [
+                apiUserData.module1,
+                apiUserData.module2,
+                apiUserData.module3,
+              ].filter(Boolean),
+              grade: apiUserData.grade,
+              semester: apiUserData.semester,
+            };
+            localStorage.setItem("userData", JSON.stringify(updatedUserData));
+            console.log(
+              "💾 Main.jsx - localStorage에 저장된 데이터:",
+              updatedUserData
+            );
+          } else {
+            console.log(
+              "⚠️ Main.jsx - userId가 없어서 localStorage 데이터 사용"
+            );
+            // userId가 없으면 localStorage 데이터 사용
+            if (savedUserData) {
+              const userData = JSON.parse(savedUserData);
+              setUser({
+                name: userData.name || "사용자",
+                major: userData.major || "전공 미설정",
+                subMajor: userData.double_major || "",
+                studentId: userData.student_id || userData.studentId || "",
+                credits: `${credits.completed}/${credits.total}`,
+              });
+            } else {
+              // 기본값 설정
+              setUser({
+                name: "신상현",
+                major: "Global Business & Technology 학부",
+                subMajor: "AI융합전공",
+                studentId: "202001896",
+                credits: `${credits.completed}/${credits.total}`,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("❌ Main.jsx - 사용자 정보 로드 오류:", error);
+          console.error(
+            "❌ Main.jsx - 오류 상세:",
+            error.response?.data || error.message
+          );
+          // API 오류 시 localStorage 데이터로 폴백
+          const savedUserData = localStorage.getItem("userData");
+          const savedCredits = localStorage.getItem("userCredits");
+          const credits = savedCredits
+            ? JSON.parse(savedCredits)
+            : { completed: "109", total: "134" };
+
+          if (savedUserData) {
+            const userData = JSON.parse(savedUserData);
+            setUser({
+              name: userData.name || "사용자",
+              major: userData.major || "전공 미설정",
+              subMajor: userData.double_major || "",
+              studentId: userData.student_id || userData.studentId || "",
+              credits: `${credits.completed}/${credits.total}`,
+            });
+          }
+        }
       }
-    }
+      setLoading(false);
+    };
+
+    loadUserData();
   }, []);
 
   // localStorage에서 시간표 불러오기
   const savedTimetable = JSON.parse(
     localStorage.getItem("finalTimetable") || "null"
   );
-
   return (
     <MainContainer>
-      {isLoggedIn ? (
+      {loading ? (
+        <Card>
+          <Title>사용자 정보를 불러오는 중...</Title>
+        </Card>
+      ) : isLoggedIn ? (
         <Card onClick={() => navigate("/mypage")}>
           <Title>
             반갑습니다 <Highlight>{user.name}</Highlight> 회원님

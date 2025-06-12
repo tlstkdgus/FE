@@ -7,7 +7,7 @@ import {
   DOUBLE_MAJOR_TYPES,
   FUSION_MODULES,
 } from "../data/collegeData";
-import axiosInstance from "../axiosInstance";
+import { getUserInfo, updateUserProfile } from "../axiosInstance";
 
 const Container = styled.div`
   width: 100%;
@@ -201,7 +201,6 @@ export default function EditProfile() {
   const [formData, setFormData] = useState({
     name: "",
     student_id: "",
-    email: "",
     college: "",
     major: "",
     doubleMajorType: "",
@@ -214,19 +213,115 @@ export default function EditProfile() {
 
   const [availableMajors, setAvailableMajors] = useState([]);
   const [availableDoubleMajors, setAvailableDoubleMajors] = useState([]);
-
   // 초기 데이터 로드
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const savedUserData = localStorage.getItem("userData");
+        let userId = null;
 
+        console.log("🔍 EditProfile.jsx - savedUserData:", savedUserData);
         if (savedUserData) {
+          const userData = JSON.parse(savedUserData);
+          userId = userData.userId || userData.student_id || userData.studentId;
+          console.log("🔍 EditProfile.jsx - parsed userData:", userData);
+          console.log("🔍 EditProfile.jsx - extracted userId:", userId);
+        }
+
+        if (userId) {
+          // API로 최신 사용자 정보 가져오기
+          try {
+            console.log("🚀 EditProfile.jsx - API 호출 시작, userId:", userId);
+            const apiUserData = await getUserInfo(userId);
+            console.log("✅ EditProfile.jsx - API 응답 데이터:", apiUserData);
+
+            // API 응답을 폼 데이터 형식에 맞게 변환
+            setFormData({
+              name: apiUserData.name || "",
+              student_id: apiUserData.studentId || "",
+              college: apiUserData.college || "",
+              major: apiUserData.major || "",
+              doubleMajorType: apiUserData.doubleMajorType || "NONE",
+              doubleMajorCollege: "", // UI용 필드는 빈 값으로 시작
+              double_major: apiUserData.doubleMajor || "",
+              modules:
+                [
+                  apiUserData.module1,
+                  apiUserData.module2,
+                  apiUserData.module3,
+                ].filter(Boolean) || null,
+              grade: apiUserData.grade?.toString() || "",
+              semester: apiUserData.semester?.toString() || "",
+            });
+
+            console.log("🔄 EditProfile.jsx - 설정된 폼 데이터:", {
+              name: apiUserData.name || "",
+              student_id: apiUserData.studentId || "",
+              college: apiUserData.college || "",
+              major: apiUserData.major || "",
+              doubleMajorType: apiUserData.doubleMajorType || "NONE",
+              doubleMajorCollege: "",
+              double_major: apiUserData.doubleMajor || "",
+              modules:
+                [
+                  apiUserData.module1,
+                  apiUserData.module2,
+                  apiUserData.module3,
+                ].filter(Boolean) || null,
+              grade: apiUserData.grade?.toString() || "",
+              semester: apiUserData.semester?.toString() || "",
+            }); // localStorage에도 업데이트된 정보 저장
+            const updatedUserData = {
+              userId: userId, // API 호출에 사용한 userId 저장
+              name: apiUserData.name,
+              student_id: apiUserData.studentId,
+              college: apiUserData.college,
+              major: apiUserData.major,
+              doubleMajorType: apiUserData.doubleMajorType,
+              double_major: apiUserData.doubleMajor,
+              modules: [
+                apiUserData.module1,
+                apiUserData.module2,
+                apiUserData.module3,
+              ].filter(Boolean),
+              grade: apiUserData.grade,
+              semester: apiUserData.semester,
+            };
+            localStorage.setItem("userData", JSON.stringify(updatedUserData));
+            console.log(
+              "💾 EditProfile.jsx - localStorage에 저장된 데이터:",
+              updatedUserData
+            );
+          } catch (apiError) {
+            console.error("❌ EditProfile.jsx - API 호출 오류:", apiError);
+            console.error(
+              "❌ EditProfile.jsx - 오류 상세:",
+              apiError.response?.data || apiError.message
+            );
+            console.log("🔄 EditProfile.jsx - localStorage 데이터로 폴백");
+            // API 오류 시 localStorage 데이터로 폴백
+            if (savedUserData) {
+              const userData = JSON.parse(savedUserData);
+              setFormData({
+                name: userData.name || "",
+                student_id: userData.student_id || "",
+                college: userData.college || "",
+                major: userData.major || "",
+                doubleMajorType: userData.doubleMajorType || "",
+                doubleMajorCollege: userData.doubleMajorCollege || "",
+                double_major: userData.double_major || "",
+                modules: userData.modules || null,
+                grade: userData.grade || "",
+                semester: userData.semester || "",
+              });
+            }
+          }
+        } else if (savedUserData) {
+          // userId가 없으면 localStorage 데이터만 사용
           const userData = JSON.parse(savedUserData);
           setFormData({
             name: userData.name || "",
             student_id: userData.student_id || "",
-            email: userData.email || "",
             college: userData.college || "",
             major: userData.major || "",
             doubleMajorType: userData.doubleMajorType || "",
@@ -237,10 +332,10 @@ export default function EditProfile() {
             semester: userData.semester || "",
           });
         } else {
+          // 기본값 설정
           setFormData({
             name: "신상현",
             student_id: "202001896",
-            email: "user@example.com",
             college: "경상대학",
             major: "Global_Business_Technology학부",
             doubleMajorType: "NONE",
@@ -256,7 +351,6 @@ export default function EditProfile() {
         setFormData({
           name: "",
           student_id: "",
-          email: "",
           college: "",
           major: "",
           doubleMajorType: "NONE",
@@ -353,8 +447,6 @@ export default function EditProfile() {
     try {
       if (
         !formData.name ||
-        !formData.student_id ||
-        !formData.email ||
         !formData.college ||
         !formData.major ||
         !formData.grade ||
@@ -363,16 +455,10 @@ export default function EditProfile() {
         throw new Error("필수 항목을 모두 입력해주세요.");
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        throw new Error("올바른 이메일 형식을 입력해주세요.");
-      }
-
       // 백엔드로 보낼 데이터 (doubleMajorCollege는 제외)
       const updateData = {
         name: formData.name,
         student_id: formData.student_id,
-        email: formData.email,
         college: formData.college,
         major: formData.major,
         double_major_type:
@@ -382,22 +468,35 @@ export default function EditProfile() {
         grade: parseInt(formData.grade) || 1,
         semester: parseInt(formData.semester) || 1,
       };
+      console.log("🚀 EditProfile.jsx - 프로필 업데이트 시작:", updateData); // 실제 API 호출
+      // localStorage에서 userId 가져오기
+      const savedUserData = localStorage.getItem("userData");
+      let apiUserId = formData.student_id; // 기본값
 
-      console.log("프로필 업데이트:", updateData);
+      if (savedUserData) {
+        const userData = JSON.parse(savedUserData);
+        apiUserId =
+          userData.userId || userData.student_id || formData.student_id;
+      }
+
+      console.log("🔄 EditProfile.jsx - API 호출, userId:", apiUserId);
+      const response = await updateUserProfile(apiUserId, updateData);
+      console.log("✅ EditProfile.jsx - 프로필 업데이트 성공:", response);
 
       // localStorage에는 doubleMajorCollege도 포함해서 저장 (UI 상태 유지용)
       const localStorageData = { ...formData };
       localStorage.setItem("userData", JSON.stringify(localStorageData));
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       setSuccess("프로필이 성공적으로 업데이트되었습니다!");
-
       setTimeout(() => {
         navigate("/mypage");
       }, 2000);
     } catch (err) {
-      console.error("프로필 업데이트 오류:", err);
+      console.error("❌ EditProfile.jsx - 프로필 업데이트 오류:", err);
+      console.error(
+        "❌ EditProfile.jsx - 오류 상세:",
+        err.response?.data || err.message
+      );
       setError(err.message || "프로필 업데이트에 실패했습니다.");
     } finally {
       setLoading(false);
@@ -421,32 +520,22 @@ export default function EditProfile() {
               placeholder="이름을 입력해 주세요"
               required
             />
-          </FormGroup>
-
+          </FormGroup>{" "}
           <FormGroup>
-            <Label>학번 *</Label>
+            <Label>학번 (변경 불가)</Label>
             <Input
               type="text"
               name="student_id"
               value={formData.student_id}
-              onChange={handleInputChange}
-              placeholder="학번을 입력해 주세요"
-              required
+              disabled
+              placeholder="학번은 변경할 수 없습니다"
+              style={{
+                backgroundColor: "var(--section)",
+                color: "var(--subtext)",
+                cursor: "not-allowed",
+              }}
             />
           </FormGroup>
-
-          <FormGroup>
-            <Label>이메일 *</Label>
-            <Input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="이메일을 입력해 주세요"
-              required
-            />
-          </FormGroup>
-
           <FormGroup>
             <Label>단과대학 *</Label>
             <CustomSelectWrapper>
@@ -468,7 +557,6 @@ export default function EditProfile() {
               <SelectArrow />
             </CustomSelectWrapper>
           </FormGroup>
-
           <FormGroup>
             <Label>전공 *</Label>
             <CustomSelectWrapper>
@@ -494,7 +582,6 @@ export default function EditProfile() {
               <SelectArrow />
             </CustomSelectWrapper>
           </FormGroup>
-
           <FormGroup>
             <Label>이중/부전공 타입 *</Label>
             <CustomSelectWrapper>
@@ -516,7 +603,6 @@ export default function EditProfile() {
               <SelectArrow />
             </CustomSelectWrapper>
           </FormGroup>
-
           {(formData.doubleMajorType === "DOUBLE_MAJOR" ||
             formData.doubleMajorType === "MINOR" ||
             formData.doubleMajorType === "INTENSIVE_MINOR") && (
@@ -572,7 +658,6 @@ export default function EditProfile() {
               </FormGroup>
             </>
           )}
-
           {formData.double_major === "융합인재학부" && (
             <FormGroup>
               <Label>모듈 선택 *</Label>
@@ -601,7 +686,6 @@ export default function EditProfile() {
               </CustomSelectWrapper>
             </FormGroup>
           )}
-
           <Row>
             <FormGroup style={{ flex: 1 }}>
               <Label>학년 *</Label>
@@ -643,10 +727,8 @@ export default function EditProfile() {
               </CustomSelectWrapper>
             </FormGroup>
           </Row>
-
           {error && <ErrorMessage>{error}</ErrorMessage>}
           {success && <SuccessMessage>{success}</SuccessMessage>}
-
           <ButtonGroup>
             <CancelButton
               type="button"
