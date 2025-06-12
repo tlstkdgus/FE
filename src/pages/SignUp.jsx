@@ -2,6 +2,12 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosInstance";
+import {
+  COLLEGES,
+  DOUBLE_MAJOR_TYPES,
+  MAJORS_BY_COLLEGE,
+  FUSION_MODULES,
+} from "../data/collegeData";
 
 const Container = styled.div`
   width: 100%;
@@ -97,6 +103,11 @@ const Select = styled.select`
     font-size: var(--body-small);
     opacity: 1;
   }
+  &:disabled {
+    background: var(--section);
+    color: var(--subtext);
+    cursor: not-allowed;
+  }
 `;
 
 const SelectArrow = styled.span`
@@ -163,9 +174,14 @@ export default function SignUp() {
         [name]: value,
       };
 
+      // college가 변경될 때 major 초기화
+      if (name === "college") {
+        newData.major = "";
+      }
+
       // doubleMajorType이 변경될 때 관련 필드 초기화
       if (name === "doubleMajorType") {
-        if (value !== "이중/부전공") {
+        if (!["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(value)) {
           newData.double_major = "";
           newData.modules = null;
         }
@@ -182,46 +198,167 @@ export default function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 필수 필드 검증 강화
+    console.log("🔍 폼 데이터 전체 검증:");
+    console.log("formData:", formData);
+
+    if (!formData.name || formData.name.trim() === "") {
+      alert("성함을 입력해주세요.");
+      return;
+    }
+
+    if (!formData.student_id || formData.student_id.trim() === "") {
+      alert("학번을 입력해주세요.");
+      return;
+    }
+
+    if (!formData.password || formData.password.trim() === "") {
+      alert("비밀번호를 입력해주세요.");
+      return;
+    }
+
+    if (!formData.college || formData.college.trim() === "") {
+      alert("단과대학을 선택해주세요.");
+      return;
+    }
+
+    if (!formData.major || formData.major.trim() === "") {
+      alert("전공을 선택해주세요.");
+      return;
+    }
     try {
-      // API 호출을 위한 데이터 준비
+      // API 호출을 위한 데이터 준비 - null 값 방지 및 기본값 설정
       const submitData = {
-        student_id: formData.student_id,
-        password: formData.password,
-        name: formData.name,
-        college: formData.college,
-        major: formData.major,
+        student_id: formData.student_id.trim(),
+        password: formData.password.trim(),
+        name: formData.name.trim(),
+        college: formData.college.trim(),
+        major: formData.major.trim(),
         double_major_type:
-          formData.doubleMajorType === "없음" ? null : formData.doubleMajorType,
-        double_major:
-          formData.doubleMajorType === "이중/부전공"
-            ? formData.double_major
-            : null,
+          formData.doubleMajorType && formData.doubleMajorType.trim() !== ""
+            ? formData.doubleMajorType.trim()
+            : "NONE", // null 대신 기본값 "NONE" 사용
+        double_major: ["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(
+          formData.doubleMajorType
+        )
+          ? formData.double_major
+            ? formData.double_major.trim()
+            : null
+          : null,
         modules:
           formData.modules && formData.modules.length > 0
-            ? formData.modules
+            ? formData.modules.filter((m) => m && m.trim() !== "")
             : null,
-        grade: parseInt(formData.grade) || 0,
-        semester: parseInt(formData.semester) || 0,
+        grade: parseInt(formData.grade) || 1,
+        semester: parseInt(formData.semester) || 1,
       };
 
-      console.log("회원가입 데이터:", submitData);
+      // 데이터 검증 로깅
+      console.log("📤 회원가입 데이터 전송:", submitData);
+      console.log("📋 각 필드 검증:");
+      console.log(
+        "- student_id:",
+        submitData.student_id,
+        "타입:",
+        typeof submitData.student_id,
+        "길이:",
+        submitData.student_id?.length
+      );
+      console.log(
+        "- password:",
+        submitData.password ? "***" : "NULL",
+        "타입:",
+        typeof submitData.password,
+        "길이:",
+        submitData.password?.length
+      );
+      console.log(
+        "- name:",
+        submitData.name,
+        "타입:",
+        typeof submitData.name,
+        "길이:",
+        submitData.name?.length
+      );
+      console.log(
+        "- college:",
+        submitData.college,
+        "타입:",
+        typeof submitData.college
+      );
+      console.log(
+        "- major:",
+        submitData.major,
+        "타입:",
+        typeof submitData.major
+      );
+      console.log(
+        "- double_major_type:",
+        submitData.double_major_type,
+        "타입:",
+        typeof submitData.double_major_type
+      );
+      console.log(
+        "- double_major:",
+        submitData.double_major,
+        "타입:",
+        typeof submitData.double_major
+      );
+      console.log(
+        "- modules:",
+        submitData.modules,
+        "타입:",
+        typeof submitData.modules
+      );
+      console.log(
+        "- grade:",
+        submitData.grade,
+        "타입:",
+        typeof submitData.grade
+      );
+      console.log(
+        "- semester:",
+        submitData.semester,
+        "타입:",
+        typeof submitData.semester
+      );
+
+      // null 값 체크
+      const nullFields = Object.entries(submitData)
+        .filter(
+          ([key, value]) =>
+            value === null &&
+            !["double_major_type", "double_major", "modules"].includes(key)
+        )
+        .map(([key]) => key);
+
+      if (nullFields.length > 0) {
+        console.error("❌ NULL 값이 포함된 필수 필드:", nullFields);
+        alert(`다음 필드를 확인해주세요: ${nullFields.join(", ")}`);
+        return;
+      }
 
       // 회원가입 API 호출
       const response = await axiosInstance.post("/auth/signup", submitData);
 
       if (response.status === 200 || response.status === 201) {
-        console.log("회원가입 성공:", response.data);
-        // 회원가입 성공 시
+        console.log("✅ 회원가입 성공:", response.data);
         navigate("/signup-complete");
       }
     } catch (error) {
-      console.error("회원가입 실패:", error);
+      console.error("❌ 회원가입 실패:", error);
+      console.error("Error response:", error.response);
+      console.error("Error data:", error.response?.data);
+      console.error("Error status:", error.response?.status);
 
       if (error.response) {
         // 서버에서 응답을 받은 경우 (4xx, 5xx 상태코드)
         const errorMessage =
-          error.response.data?.message || "회원가입에 실패했습니다.";
-        alert(errorMessage);
+          error.response.data?.message ||
+          error.response.data?.error ||
+          JSON.stringify(error.response.data) ||
+          "회원가입에 실패했습니다.";
+        alert(`회원가입 실패 (${error.response.status}): ${errorMessage}`);
       } else if (error.request) {
         // 요청은 전송되었지만 응답을 받지 못한 경우
         alert("서버와의 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.");
@@ -274,7 +411,7 @@ export default function SignUp() {
               placeholder="이름을 입력해 주세요"
               required
             />
-          </Field>
+          </Field>{" "}
           <Field>
             <Label htmlFor="college">단과대학</Label>
             <CustomSelectWrapper>
@@ -288,24 +425,15 @@ export default function SignUp() {
                 <option value="" disabled>
                   단과대학을 선택하세요
                 </option>
-                <option value="경상대학">경상대학</option>
-                <option value="통번역대학">통번역대학</option>
-                <option value="공과대학">공과대학</option>
-                <option value="자연과학대학">자연과학대학</option>{" "}
-                <option value="국제지역대학">국제지역대학</option>
-                <option value="인문대학">인문대학</option>
-                <option value="국가전략언어대학">국가전략언어대학</option>
-                <option value="융합인재대학">융합인재대학</option>
-                <option value="Culture&Technology융합대학">
-                  Culture&Technology 융합대학
-                </option>
-                <option value="AI융합대학">AI융합대학</option>
-                <option value="바이오메디컬공학부">바이오메디컬공학부</option>
-                <option value="기후변화융합학부">기후변화융합학부</option>
+                {COLLEGES.map((college) => (
+                  <option key={college} value={college}>
+                    {college}
+                  </option>
+                ))}
               </Select>
               <SelectArrow />
             </CustomSelectWrapper>
-          </Field>
+          </Field>{" "}
           <Field>
             <Label htmlFor="major">전공</Label>
             <CustomSelectWrapper>
@@ -315,20 +443,23 @@ export default function SignUp() {
                 value={formData.major}
                 onChange={handleInputChange}
                 required
+                disabled={!formData.college}
               >
                 <option value="" disabled>
-                  전공을 선택하세요
+                  {formData.college
+                    ? "전공을 선택하세요"
+                    : "단과대학을 먼저 선택하세요"}
                 </option>
-                <option value="Global Business & Technology전공">
-                  Global Business & Technology전공
-                </option>
-                <option value="러시아학과">러시아학과</option>
-                <option value="언어인지과학과">언어인지과학과</option>
-                {/* 데이터 추가 예정 */}
+                {formData.college &&
+                  MAJORS_BY_COLLEGE[formData.college]?.map((major) => (
+                    <option key={major} value={major}>
+                      {major}
+                    </option>
+                  ))}
               </Select>
               <SelectArrow />
             </CustomSelectWrapper>
-          </Field>
+          </Field>{" "}
           <Field>
             <Label htmlFor="doubleMajorType">이중 / 부전공 타입</Label>
             <CustomSelectWrapper>
@@ -342,14 +473,18 @@ export default function SignUp() {
                 <option value="" disabled>
                   타입을 선택하세요
                 </option>
-                <option value="없음">없음</option>
-                <option value="전공심화">전공심화</option>
-                <option value="이중/부전공">이중/부전공</option>
+                {DOUBLE_MAJOR_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
               </Select>
               <SelectArrow />
             </CustomSelectWrapper>
-          </Field>
-          {formData.doubleMajorType === "이중/부전공" && (
+          </Field>{" "}
+          {(formData.doubleMajorType === "DOUBLE_MAJOR" ||
+            formData.doubleMajorType === "MINOR" ||
+            formData.doubleMajorType === "INTENSIVE_MINOR") && (
             <Field>
               <Label htmlFor="double_major">이중 / 부전공</Label>
               <CustomSelectWrapper>
@@ -360,24 +495,14 @@ export default function SignUp() {
                   onChange={handleInputChange}
                   required
                 >
-                  {" "}
                   <option value="" disabled>
                     이중/부전공을 선택하세요
                   </option>
-                  <option value="경상대학">경상대학</option>
-                  <option value="통번역대학">통번역대학</option>
-                  <option value="공과대학">공과대학</option>
-                  <option value="자연과학대학">자연과학대학</option>
-                  <option value="국제지역대학">국제지역대학</option>
-                  <option value="인문대학">인문대학</option>
-                  <option value="국가전략언어대학">국가전략언어대학</option>
-                  <option value="융합인재대학">융합인재대학</option>
-                  <option value="Culture&Technology융합대학">
-                    Culture&Technology 융합대학
-                  </option>
-                  <option value="AI융합대학">AI융합대학</option>
-                  <option value="바이오메디컬공학부">바이오메디컬공학부</option>
-                  <option value="기후변화융합학부">기후변화융합학부</option>
+                  {COLLEGES.map((college) => (
+                    <option key={college} value={college}>
+                      {college}
+                    </option>
+                  ))}
                 </Select>
                 <SelectArrow />
               </CustomSelectWrapper>
@@ -399,15 +524,15 @@ export default function SignUp() {
                     }));
                   }}
                 >
+                  {" "}
                   <option value="" disabled>
                     모듈을 선택하세요
                   </option>
-                  <option value="AI융합전공">AI융합전공</option>
-                  <option value="바이오헬스융합전공">바이오헬스융합전공</option>
-                  <option value="미디어아트융합전공">미디어아트융합전공</option>
-                  <option value="글로벌리더십융합전공">
-                    글로벌리더십융합전공
-                  </option>
+                  {FUSION_MODULES.map((module) => (
+                    <option key={module} value={module}>
+                      {module}
+                    </option>
+                  ))}
                 </Select>
                 <SelectArrow />
               </CustomSelectWrapper>

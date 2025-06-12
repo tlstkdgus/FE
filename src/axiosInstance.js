@@ -34,6 +34,18 @@ axiosInstance.interceptors.request.use(
       (config.url.includes("/auth/login") ||
         config.url.includes("/auth/signup"));
 
+    // 회원가입 요청 데이터 로깅
+    if (config.url && config.url.includes("/auth/signup") && config.data) {
+      console.log("🔍 회원가입 요청 데이터 상세 로깅:");
+      console.log("- URL:", config.url);
+      console.log("- Method:", config.method);
+      console.log("- Headers:", config.headers);
+      console.log("- Data:", JSON.stringify(config.data, null, 2));
+      console.log("- name 필드:", config.data.name, "타입:", typeof config.data.name);
+      console.log("- name null 체크:", config.data.name === null ? "NULL" : "NOT NULL");
+      console.log("- name undefined 체크:", config.data.name === undefined ? "UNDEFINED" : "NOT UNDEFINED");
+    }
+
     if (accessToken && !isAuthRoute) {
       // 디버깅용 로그 (토큰 전체가 아닌 일부만 표시)
       const tokenPreview =
