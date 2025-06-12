@@ -33,7 +33,6 @@ axiosInstance.interceptors.request.use(
       config.url &&
       (config.url.includes("/auth/login") ||
         config.url.includes("/auth/signup"));
-
     if (accessToken && !isAuthRoute) {
       // 디버깅용 로그 (토큰 전체가 아닌 일부만 표시)
       const tokenPreview =
@@ -41,20 +40,95 @@ axiosInstance.interceptors.request.use(
         "..." +
         accessToken.substring(accessToken.length - 5);
       console.log(`🔹 인증 토큰이 요청에 포함됩니다. (${tokenPreview})`);
+      console.log(`🔹 요청 URL: ${config.baseURL}${config.url}`);
+      console.log(`🔹 요청 메서드: ${config.method?.toUpperCase()}`);
       config.headers["Authorization"] = `Bearer ${accessToken}`;
     } else if (!isAuthRoute && !accessToken) {
       // 인증이 필요한 API인데 토큰이 없는 경우만 경고
       console.warn(
         "⚠️ 토큰이 없습니다. 로그인이 필요한 기능에 접근할 수 없습니다."
       );
+      console.warn(`⚠️ 요청 URL: ${config.baseURL}${config.url}`);
     }
 
     return config;
   },
   (error) => {
+    console.error("🔹 요청 인터셉터 오류:", error);
     return Promise.reject(error);
   }
 );
+
+// 응답 인터셉터 (응답 로깅)
+axiosInstance.interceptors.response.use(
+  (response) => {
+    console.log(`✅ API 응답 성공:`, {
+      url: response.config.url,
+      method: response.config.method?.toUpperCase(),
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    console.error(`❌ API 응답 오류:`, {
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+    });
+    return Promise.reject(error);
+  }
+);
+
+// API 함수들
+export const getUserInfo = async (userId) => {
+  try {
+    console.log("🌐 axiosInstance - getUserInfo 호출, userId:", userId);
+    const url = `/users/${userId}/mypage`;
+    console.log("🌐 axiosInstance - 요청 URL:", url);
+
+    const response = await axiosInstance.get(url);
+    console.log("🌐 axiosInstance - getUserInfo 응답:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("🌐 axiosInstance - getUserInfo 오류:", error);
+    console.error("🌐 axiosInstance - 오류 상세:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+    });
+    throw error;
+  }
+};
+
+export const updateUserProfile = async (userId, profileData) => {
+  try {
+    console.log("🌐 axiosInstance - updateUserProfile 호출, userId:", userId);
+    console.log("🌐 axiosInstance - 전송할 데이터:", profileData);
+    const url = `/users/${userId}/mypage`;
+    console.log("🌐 axiosInstance - 요청 URL:", url);
+
+    const response = await axiosInstance.put(url, profileData);
+    console.log("🌐 axiosInstance - updateUserProfile 응답:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("🌐 axiosInstance - updateUserProfile 오류:", error);
+    console.error("🌐 axiosInstance - 오류 상세:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+    });
+    throw error;
+  }
+};
 
 export default axiosInstance;
 

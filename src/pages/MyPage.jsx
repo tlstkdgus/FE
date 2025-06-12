@@ -9,7 +9,7 @@ import {
 } from "react-icons/hi";
 import { AiOutlineCheckCircle, AiOutlineUser } from "react-icons/ai";
 import { GrPowerCycle } from "react-icons/gr";
-import { getToken, removeToken } from "../axiosInstance";
+import { getToken, removeToken, getUserInfo } from "../axiosInstance";
 
 const Container = styled.div`
   width: 100%;
@@ -36,7 +36,7 @@ const UserSection = styled.div`
 const UserCard = styled.div`
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
-  padding: 24px;
+  padding: 16px;
   backdrop-filter: blur(10px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   position: relative;
@@ -289,31 +289,134 @@ export default function MyPage() {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  useEffect(() => {
-    const token = getToken();
-    if (token) {
-      setIsLoggedIn(true);
+  const [loading, setLoading] = useState(true);
 
-      // localStorage에서 사용자 정보 가져오기
-      const savedUserData = localStorage.getItem("userData");
-      if (savedUserData) {
-        const userData = JSON.parse(savedUserData);
-        setUser({
-          name: userData.name || "사용자",
-          major: userData.major || "전공 미설정",
-          studentId: userData.studentId || "",
-          doubleMajor: userData.doubleMajor || "",
-        });
-      } else {
-        // 기본값 설정
-        setUser({
-          name: "신상현",
-          major: "Global Business & Technology 학부",
-          studentId: "202001896",
-          doubleMajor: "AI융합전공",
-        });
+  useEffect(() => {
+    const loadUserData = async () => {
+      const token = getToken();
+      if (token) {
+        setIsLoggedIn(true);
+        try {
+          // localStorage에서 userId 가져오기 (로그인 시 저장된 값 사용)
+          const savedUserData = localStorage.getItem("userData");
+          let userId = null;
+
+          console.log("🔍 MyPage.jsx - savedUserData:", savedUserData);
+          if (savedUserData) {
+            const userData = JSON.parse(savedUserData);
+            userId =
+              userData.userId || userData.student_id || userData.studentId;
+            console.log("🔍 MyPage.jsx - parsed userData:", userData);
+            console.log("🔍 MyPage.jsx - extracted userId:", userId);
+          }
+
+          if (userId) {
+            console.log("🚀 MyPage.jsx - API 호출 시작, userId:", userId);
+            // API로 최신 사용자 정보 가져오기
+            const apiUserData = await getUserInfo(userId);
+            console.log("✅ MyPage.jsx - API 응답 데이터:", apiUserData);
+
+            // API 응답을 기존 형식에 맞게 변환
+            const formattedUser = {
+              name: apiUserData.name || "사용자",
+              major: apiUserData.major || "전공 미설정",
+              studentId: apiUserData.studentId,
+              college: apiUserData.college,
+              doubleMajor: apiUserData.doubleMajor || "",
+              doubleMajorType: apiUserData.doubleMajorType,
+              modules: [
+                apiUserData.module1,
+                apiUserData.module2,
+                apiUserData.module3,
+              ].filter(Boolean),
+              grade: apiUserData.grade,
+              semester: apiUserData.semester,
+            };
+
+            console.log("🔄 MyPage.jsx - 변환된 사용자 데이터:", formattedUser);
+            setUser(formattedUser); // localStorage에도 업데이트된 정보 저장
+            const updatedUserData = {
+              userId: userId, // API 호출에 사용한 userId 저장
+              name: apiUserData.name,
+              student_id: apiUserData.studentId,
+              college: apiUserData.college,
+              major: apiUserData.major,
+              doubleMajorType: apiUserData.doubleMajorType,
+              double_major: apiUserData.doubleMajor,
+              modules: [
+                apiUserData.module1,
+                apiUserData.module2,
+                apiUserData.module3,
+              ].filter(Boolean),
+              grade: apiUserData.grade,
+              semester: apiUserData.semester,
+            };
+            localStorage.setItem("userData", JSON.stringify(updatedUserData));
+            console.log(
+              "💾 MyPage.jsx - localStorage에 저장된 데이터:",
+              updatedUserData
+            );
+          } else {
+            console.log(
+              "⚠️ MyPage.jsx - userId가 없어서 localStorage 데이터 사용"
+            );
+            // userId가 없으면 localStorage 데이터 사용
+            if (savedUserData) {
+              const userData = JSON.parse(savedUserData);
+              setUser({
+                name: userData.name || "사용자",
+                major: userData.major || "전공 미설정",
+                studentId: userData.student_id || userData.studentId || "",
+                college: userData.college,
+                doubleMajor: userData.double_major || "",
+                doubleMajorType: userData.doubleMajorType,
+                modules: userData.modules || [],
+                grade: userData.grade,
+                semester: userData.semester,
+              });
+            } else {
+              // 기본값 설정
+              setUser({
+                name: "신상현",
+                major: "Global Business & Technology 학부",
+                studentId: "202001896",
+                college: "경상대학",
+                doubleMajor: "AI융합전공",
+                doubleMajorType: "DOUBLE_MAJOR",
+                modules: [],
+                grade: 4,
+                semester: 1,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("❌ MyPage.jsx - 사용자 정보 로드 오류:", error);
+          console.error(
+            "❌ MyPage.jsx - 오류 상세:",
+            error.response?.data || error.message
+          );
+          // API 오류 시 localStorage 데이터로 폴백
+          const savedUserData = localStorage.getItem("userData");
+          if (savedUserData) {
+            const userData = JSON.parse(savedUserData);
+            setUser({
+              name: userData.name || "사용자",
+              major: userData.major || "전공 미설정",
+              studentId: userData.student_id || userData.studentId || "",
+              college: userData.college,
+              doubleMajor: userData.double_major || "",
+              doubleMajorType: userData.doubleMajorType,
+              modules: userData.modules || [],
+              grade: userData.grade,
+              semester: userData.semester,
+            });
+          }
+        }
       }
-    }
+      setLoading(false);
+    };
+
+    loadUserData();
   }, []);
 
   const handleLogout = () => {
@@ -346,7 +449,17 @@ export default function MyPage() {
   ];
   return (
     <Container>
-      {isLoggedIn ? (
+      {loading ? (
+        <LoginSection>
+          <LoginCard>
+            <div
+              style={{ color: "var(--white)", fontSize: "var(--body-default)" }}
+            >
+              사용자 정보를 불러오는 중...
+            </div>
+          </LoginCard>
+        </LoginSection>
+      ) : isLoggedIn ? (
         <>
           <UserSection>
             <UserCard>
@@ -394,7 +507,7 @@ export default function MyPage() {
               로그인이 필요한 서비스입니다.
               <br />
               로그인 후 이용해주세요.
-            </LoginMessage>
+            </LoginMessage>{" "}
             <ButtonGroup>
               <LoginButton onClick={() => navigate("/login")}>
                 로그인

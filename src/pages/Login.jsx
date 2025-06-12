@@ -166,18 +166,75 @@ export default function Login() {
       console.log("로그인 데이터:", formData); // 로그인 API 호출
       const response = await axiosInstance.post("/auth/login", formData);
       if (response.status === 200) {
-        console.log("로그인 성공:", response.data);
+        console.log("🔍 Login.jsx - 로그인 성공 전체 응답:", response.data);
+        console.log(
+          "🔍 Login.jsx - response.data.user_id:",
+          response.data.user_id
+        );
+        console.log("🔍 Login.jsx - response.data.name:", response.data.name);
+        console.log("🔍 Login.jsx - response.data.token:", response.data.token);
 
         // 토큰이 응답에 있다면 저장
         const token =
+          response.data.token ||
           response.data.accessToken ||
-          response.data.access_token ||
-          response.data.token;
+          response.data.access_token;
         if (token) {
           setToken(token);
-          console.log("토큰 저장 완료");
+          console.log("🔑 Login.jsx - 토큰 저장 완료");
         } else {
           console.warn("응답에서 토큰을 찾을 수 없습니다:", response.data);
+        }
+
+        // 로그인 응답에서 직접 user_id, name 추출
+        const userId = response.data.user_id;
+        const name = response.data.name;
+
+        console.log("🔍 Login.jsx - 추출된 userId:", userId);
+        console.log("🔍 Login.jsx - 추출된 name:", name);
+
+        if (userId) {
+          // 사용자 정보를 localStorage에 저장
+          const userData = {
+            userId: userId, // API 호출용 ID (response.data.user_id)
+            name: name || "",
+            student_id: formData.student_id, // 로그인 폼에서 입력한 학번
+            college: "",
+            major: "",
+            doubleMajorType: "",
+            double_major: "",
+            modules: [],
+            grade: "",
+            semester: "",
+          };
+          localStorage.setItem("userData", JSON.stringify(userData));
+          console.log(
+            "💾 Login.jsx - localStorage에 사용자 정보 저장:",
+            userData
+          );
+          console.log(
+            "💾 Login.jsx - 저장된 userId (API 호출용):",
+            userData.userId
+          );
+        } else {
+          console.warn(
+            "⚠️ Login.jsx - 응답에서 user_id를 찾을 수 없습니다. student_id만 저장합니다."
+          );
+          // 최소한 student_id라도 저장 (로그인 폼에서 입력한 값)
+          const userData = {
+            userId: null, // API 호출용 ID가 없음
+            student_id: formData.student_id,
+            name: name || "",
+            college: "",
+            major: "",
+            doubleMajorType: "",
+            double_major: "",
+            modules: [],
+            grade: "",
+            semester: "",
+          };
+          localStorage.setItem("userData", JSON.stringify(userData));
+          console.log("💾 Login.jsx - 최소 userData 저장:", userData);
         }
 
         // 로그인 성공 시 메인 페이지로 이동

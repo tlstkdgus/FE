@@ -343,9 +343,30 @@ export default function SignUp() {
 
       // 회원가입 API 호출
       const response = await axiosInstance.post("/auth/signup", submitData);
-
       if (response.status === 200 || response.status === 201) {
         console.log("✅ 회원가입 성공:", response.data);
+
+        // 회원가입 성공 시 사용자 정보를 localStorage에 저장
+        // 응답에서 받은 id를 userId로 사용
+        const userData = {
+          userId: response.data.id, // API 호출용 ID
+          name: response.data.name || submitData.name,
+          student_id: response.data.student_id || submitData.student_id, // 학번 (표시용)
+          college: response.data.college || submitData.college,
+          major: response.data.major || submitData.major,
+          doubleMajorType:
+            response.data.doubleMajorType || submitData.double_major_type,
+          double_major: response.data.double_major || submitData.double_major,
+          modules: response.data.modules || submitData.modules,
+          grade: response.data.grade || submitData.grade,
+          semester: response.data.semester || submitData.semester,
+        };
+        localStorage.setItem("userData", JSON.stringify(userData));
+        console.log(
+          "💾 SignUp.jsx - localStorage에 사용자 정보 저장:",
+          userData
+        );
+
         navigate("/signup-complete");
       }
     } catch (error) {
