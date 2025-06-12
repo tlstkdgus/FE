@@ -1,61 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../axiosInstance";
 import {
+  MAJORS_BY_COLLEGE,
   COLLEGES,
   DOUBLE_MAJOR_TYPES,
-  MAJORS_BY_COLLEGE,
   FUSION_MODULES,
 } from "../data/collegeData";
+import axiosInstance from "../axiosInstance";
 
 const Container = styled.div`
   width: 100%;
-  max-width: 440px;
-  min-width: 320px;
-  margin: 0 auto;
-  background: var(--white);
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
-  position: relative;
+  padding: 16px 20px; /* 헤더 영역 확보 */
+`;
+
+const FormCard = styled.div`
+  background: var(--white);
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 `;
 
 const Title = styled.h1`
-  margin-top: 16px;
-  margin-bottom: 16px;
   font-size: var(--title-h1);
-  font-weight: var(--font-weight-semibold);
-`;
-
-const Description = styled.div`
+  font-weight: var(--font-weight-bold);
   color: var(--black);
+  margin-bottom: 8px;
+  text-align: center;
+`;
+
+const Subtitle = styled.p`
   font-size: var(--body-default);
+  color: var(--subtext);
+  text-align: center;
   margin-bottom: 32px;
-  line-height: 1.5;
 `;
 
-const FormWrapper = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding-bottom: 16px;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-`;
-
-const Field = styled.div`
-  display: flex;
-  flex-direction: column;
+const FormGroup = styled.div`
+  margin-bottom: 24px;
 `;
 
 const Label = styled.label`
+  display: block;
   font-size: var(--body-default);
   font-weight: var(--font-weight-semibold);
-  margin-bottom: 12px;
+  color: var(--black);
+  margin-bottom: 8px;
 `;
 
 const Input = styled.input`
@@ -138,26 +130,78 @@ const Row = styled.div`
   width: 100%;
 `;
 
-const Button = styled.button`
-  width: 100%;
-  padding: 18px 0;
-  background: var(--brand);
-  color: var(--white);
-  font-size: var(--body-button-default);
-  font-weight: var(--font-weight-semibold);
-  border: none;
-  border-radius: 10px;
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 12px;
   margin-top: 32px;
-  margin-bottom: 0;
-  cursor: pointer;
 `;
 
-export default function SignUp() {
+const SaveButton = styled.button`
+  flex: 1;
+  padding: 16px;
+  background: var(--brand);
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-size: var(--body-button-default);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #4f6ef7;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(48, 95, 248, 0.3);
+  }
+
+  &:disabled {
+    background: var(--subtext);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+`;
+
+const CancelButton = styled.button`
+  flex: 1;
+  padding: 16px;
+  background: var(--white);
+  color: var(--subtext);
+  border: 2px solid var(--section);
+  border-radius: 12px;
+  font-size: var(--body-button-default);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--subtext);
+    color: var(--black);
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #ef4444;
+  font-size: var(--body-small);
+  margin-top: 8px;
+`;
+
+const SuccessMessage = styled.div`
+  color: #10b981;
+  font-size: var(--body-small);
+  margin-top: 8px;
+`;
+
+export default function EditProfile() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   const [formData, setFormData] = useState({
-    student_id: "",
-    password: "",
     name: "",
+    student_id: "",
+    email: "",
     college: "",
     major: "",
     doubleMajorType: "",
@@ -167,6 +211,116 @@ export default function SignUp() {
     grade: "",
     semester: "",
   });
+
+  const [availableMajors, setAvailableMajors] = useState([]);
+  const [availableDoubleMajors, setAvailableDoubleMajors] = useState([]);
+
+  // 초기 데이터 로드
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const savedUserData = localStorage.getItem("userData");
+
+        if (savedUserData) {
+          const userData = JSON.parse(savedUserData);
+          setFormData({
+            name: userData.name || "",
+            student_id: userData.student_id || "",
+            email: userData.email || "",
+            college: userData.college || "",
+            major: userData.major || "",
+            doubleMajorType: userData.doubleMajorType || "",
+            doubleMajorCollege: userData.doubleMajorCollege || "",
+            double_major: userData.double_major || "",
+            modules: userData.modules || null,
+            grade: userData.grade || "",
+            semester: userData.semester || "",
+          });
+        } else {
+          setFormData({
+            name: "신상현",
+            student_id: "202001896",
+            email: "user@example.com",
+            college: "경상대학",
+            major: "Global_Business_Technology학부",
+            doubleMajorType: "NONE",
+            doubleMajorCollege: "",
+            double_major: "",
+            modules: null,
+            grade: "4",
+            semester: "1",
+          });
+        }
+      } catch (error) {
+        console.error("사용자 데이터 로드 오류:", error);
+        setFormData({
+          name: "",
+          student_id: "",
+          email: "",
+          college: "",
+          major: "",
+          doubleMajorType: "NONE",
+          doubleMajorCollege: "",
+          double_major: "",
+          modules: null,
+          grade: "",
+          semester: "",
+        });
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  // 단과대학 변경 시 전공 목록 업데이트
+  useEffect(() => {
+    if (formData.college) {
+      const majors = MAJORS_BY_COLLEGE[formData.college] || [];
+      setAvailableMajors(majors);
+
+      if (!majors.includes(formData.major)) {
+        setFormData((prev) => ({ ...prev, major: "" }));
+      }
+    }
+  }, [formData.college]);
+
+  // 이중전공용 단과대학 변경 시 전공 목록 업데이트
+  useEffect(() => {
+    if (formData.doubleMajorCollege) {
+      const majors = MAJORS_BY_COLLEGE[formData.doubleMajorCollege] || [];
+      setAvailableDoubleMajors(majors);
+
+      if (!majors.includes(formData.double_major)) {
+        setFormData((prev) => ({ ...prev, double_major: "" }));
+      }
+    }
+  }, [formData.doubleMajorCollege]);
+
+  // 이중전공 타입 변경 시 관련 필드 초기화
+  useEffect(() => {
+    if (formData.doubleMajorType) {
+      if (
+        !["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(
+          formData.doubleMajorType
+        )
+      ) {
+        setFormData((prev) => ({
+          ...prev,
+          doubleMajorCollege: "",
+          double_major: "",
+          modules: null,
+        }));
+      }
+    }
+
+    if (formData.double_major !== "융합인재대학") {
+      setFormData((prev) => ({
+        ...prev,
+        modules: null,
+      }));
+    }
+  }, [formData.doubleMajorType, formData.double_major]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -174,18 +328,6 @@ export default function SignUp() {
         ...prev,
         [name]: value,
       };
-
-      // college가 변경될 때 major 초기화
-      if (name === "college") {
-        newData.major = "";
-      } // doubleMajorType이 변경될 때 관련 필드 초기화
-      if (name === "doubleMajorType") {
-        if (!["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(value)) {
-          newData.doubleMajorCollege = "";
-          newData.double_major = "";
-          newData.modules = null;
-        }
-      }
 
       // doubleMajorCollege가 변경될 때 double_major 초기화
       if (name === "doubleMajorCollege") {
@@ -197,229 +339,118 @@ export default function SignUp() {
 
       return newData;
     });
+
+    if (error) setError("");
+    if (success) setSuccess("");
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
-    // 필수 필드 검증 강화
-    console.log("🔍 폼 데이터 전체 검증:");
-    console.log("formData:", formData);
-
-    if (!formData.name || formData.name.trim() === "") {
-      alert("성함을 입력해주세요.");
-      return;
-    }
-
-    if (!formData.student_id || formData.student_id.trim() === "") {
-      alert("학번을 입력해주세요.");
-      return;
-    }
-
-    if (!formData.password || formData.password.trim() === "") {
-      alert("비밀번호를 입력해주세요.");
-      return;
-    }
-
-    if (!formData.college || formData.college.trim() === "") {
-      alert("단과대학을 선택해주세요.");
-      return;
-    }
-
-    if (!formData.major || formData.major.trim() === "") {
-      alert("전공을 선택해주세요.");
-      return;
-    }
     try {
-      // API 호출을 위한 데이터 준비 - null 값 방지 및 기본값 설정
-      const submitData = {
-        student_id: formData.student_id.trim(),
-        password: formData.password.trim(),
-        name: formData.name.trim(),
-        college: formData.college.trim(),
-        major: formData.major.trim(),
+      if (
+        !formData.name ||
+        !formData.student_id ||
+        !formData.email ||
+        !formData.college ||
+        !formData.major ||
+        !formData.grade ||
+        !formData.semester
+      ) {
+        throw new Error("필수 항목을 모두 입력해주세요.");
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error("올바른 이메일 형식을 입력해주세요.");
+      }
+
+      // 백엔드로 보낼 데이터 (doubleMajorCollege는 제외)
+      const updateData = {
+        name: formData.name,
+        student_id: formData.student_id,
+        email: formData.email,
+        college: formData.college,
+        major: formData.major,
         double_major_type:
-          formData.doubleMajorType && formData.doubleMajorType.trim() !== ""
-            ? formData.doubleMajorType.trim()
-            : "NONE", // null 대신 기본값 "NONE" 사용
-        double_major: ["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(
-          formData.doubleMajorType
-        )
-          ? formData.double_major
-            ? formData.double_major.trim()
-            : null
-          : null,
-        modules:
-          formData.modules && formData.modules.length > 0
-            ? formData.modules.filter((m) => m && m.trim() !== "")
-            : null,
+          formData.doubleMajorType === "NONE" ? null : formData.doubleMajorType,
+        double_major: formData.double_major || null,
+        modules: formData.modules,
         grade: parseInt(formData.grade) || 1,
         semester: parseInt(formData.semester) || 1,
       };
 
-      // 데이터 검증 로깅
-      console.log("📤 회원가입 데이터 전송:", submitData);
-      console.log("📋 각 필드 검증:");
-      console.log(
-        "- student_id:",
-        submitData.student_id,
-        "타입:",
-        typeof submitData.student_id,
-        "길이:",
-        submitData.student_id?.length
-      );
-      console.log(
-        "- password:",
-        submitData.password ? "***" : "NULL",
-        "타입:",
-        typeof submitData.password,
-        "길이:",
-        submitData.password?.length
-      );
-      console.log(
-        "- name:",
-        submitData.name,
-        "타입:",
-        typeof submitData.name,
-        "길이:",
-        submitData.name?.length
-      );
-      console.log(
-        "- college:",
-        submitData.college,
-        "타입:",
-        typeof submitData.college
-      );
-      console.log(
-        "- major:",
-        submitData.major,
-        "타입:",
-        typeof submitData.major
-      );
-      console.log(
-        "- double_major_type:",
-        submitData.double_major_type,
-        "타입:",
-        typeof submitData.double_major_type
-      );
-      console.log(
-        "- double_major:",
-        submitData.double_major,
-        "타입:",
-        typeof submitData.double_major
-      );
-      console.log(
-        "- modules:",
-        submitData.modules,
-        "타입:",
-        typeof submitData.modules
-      );
-      console.log(
-        "- grade:",
-        submitData.grade,
-        "타입:",
-        typeof submitData.grade
-      );
-      console.log(
-        "- semester:",
-        submitData.semester,
-        "타입:",
-        typeof submitData.semester
-      );
+      console.log("프로필 업데이트:", updateData);
 
-      // null 값 체크
-      const nullFields = Object.entries(submitData)
-        .filter(
-          ([key, value]) =>
-            value === null &&
-            !["double_major_type", "double_major", "modules"].includes(key)
-        )
-        .map(([key]) => key);
+      // localStorage에는 doubleMajorCollege도 포함해서 저장 (UI 상태 유지용)
+      const localStorageData = { ...formData };
+      localStorage.setItem("userData", JSON.stringify(localStorageData));
 
-      if (nullFields.length > 0) {
-        console.error("❌ NULL 값이 포함된 필수 필드:", nullFields);
-        alert(`다음 필드를 확인해주세요: ${nullFields.join(", ")}`);
-        return;
-      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // 회원가입 API 호출
-      const response = await axiosInstance.post("/auth/signup", submitData);
+      setSuccess("프로필이 성공적으로 업데이트되었습니다!");
 
-      if (response.status === 200 || response.status === 201) {
-        console.log("✅ 회원가입 성공:", response.data);
-        navigate("/signup-complete");
-      }
-    } catch (error) {
-      console.error("❌ 회원가입 실패:", error);
-      console.error("Error response:", error.response);
-      console.error("Error data:", error.response?.data);
-      console.error("Error status:", error.response?.status);
-
-      if (error.response) {
-        // 서버에서 응답을 받은 경우 (4xx, 5xx 상태코드)
-        const errorMessage =
-          error.response.data?.message ||
-          error.response.data?.error ||
-          JSON.stringify(error.response.data) ||
-          "회원가입에 실패했습니다.";
-        alert(`회원가입 실패 (${error.response.status}): ${errorMessage}`);
-      } else if (error.request) {
-        // 요청은 전송되었지만 응답을 받지 못한 경우
-        alert("서버와의 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.");
-      } else {
-        // 요청 설정 중에 오류가 발생한 경우
-        alert("요청 처리 중 오류가 발생했습니다.");
-      }
+      setTimeout(() => {
+        navigate("/mypage");
+      }, 2000);
+    } catch (err) {
+      console.error("프로필 업데이트 오류:", err);
+      setError(err.message || "프로필 업데이트에 실패했습니다.");
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <Container>
-      <FormWrapper>
-        <Title>회원가입</Title>
-        <Description>
-          Scheduly의 서비스를 이용하기 위해
-          <br />
-          회원가입을 진행해 주세요
-        </Description>{" "}
-        <Form onSubmit={handleSubmit}>
-          <Field>
-            <Label htmlFor="student_id">ID(학번)</Label>
+      <FormCard>
+        <Title>개인정보 수정</Title>
+        <Subtitle>프로필 정보를 수정할 수 있습니다</Subtitle>
+
+        <form onSubmit={handleSubmit}>
+          <FormGroup>
+            <Label>이름 *</Label>
             <Input
-              id="student_id"
-              name="student_id"
-              value={formData.student_id}
-              onChange={handleInputChange}
-              placeholder="학번을 입력해 주세요"
-              required
-            />
-          </Field>
-          <Field>
-            <Label htmlFor="password">PW</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder="영문/대소문자/특수문자 중 3가지 이상 조합, 8~16자"
-              required
-            />
-          </Field>
-          <Field>
-            <Label htmlFor="name">성함</Label>
-            <Input
-              id="name"
+              type="text"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
               placeholder="이름을 입력해 주세요"
               required
             />
-          </Field>{" "}
-          <Field>
-            <Label htmlFor="college">단과대학</Label>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>학번 *</Label>
+            <Input
+              type="text"
+              name="student_id"
+              value={formData.student_id}
+              onChange={handleInputChange}
+              placeholder="학번을 입력해 주세요"
+              required
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Label>이메일 *</Label>
+            <Input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="이메일을 입력해 주세요"
+              required
+            />
+          </FormGroup>
+
+          <FormGroup>
+            <Label>단과대학 *</Label>
             <CustomSelectWrapper>
               <Select
-                id="college"
                 name="college"
                 value={formData.college}
                 onChange={handleInputChange}
@@ -436,12 +467,12 @@ export default function SignUp() {
               </Select>
               <SelectArrow />
             </CustomSelectWrapper>
-          </Field>{" "}
-          <Field>
-            <Label htmlFor="major">전공</Label>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>전공 *</Label>
             <CustomSelectWrapper>
               <Select
-                id="major"
                 name="major"
                 value={formData.major}
                 onChange={handleInputChange}
@@ -462,12 +493,12 @@ export default function SignUp() {
               </Select>
               <SelectArrow />
             </CustomSelectWrapper>
-          </Field>{" "}
-          <Field>
-            <Label htmlFor="doubleMajorType">이중 / 부전공 타입</Label>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>이중/부전공 타입 *</Label>
             <CustomSelectWrapper>
               <Select
-                id="doubleMajorType"
                 name="doubleMajorType"
                 value={formData.doubleMajorType}
                 onChange={handleInputChange}
@@ -484,16 +515,16 @@ export default function SignUp() {
               </Select>
               <SelectArrow />
             </CustomSelectWrapper>
-          </Field>{" "}
+          </FormGroup>
+
           {(formData.doubleMajorType === "DOUBLE_MAJOR" ||
             formData.doubleMajorType === "MINOR" ||
             formData.doubleMajorType === "INTENSIVE_MINOR") && (
             <>
-              <Field>
-                <Label htmlFor="doubleMajorCollege">이중/부전공 단과대학</Label>
+              <FormGroup>
+                <Label>이중/부전공 단과대학 *</Label>
                 <CustomSelectWrapper>
                   <Select
-                    id="doubleMajorCollege"
                     name="doubleMajorCollege"
                     value={formData.doubleMajorCollege}
                     onChange={handleInputChange}
@@ -510,13 +541,12 @@ export default function SignUp() {
                   </Select>
                   <SelectArrow />
                 </CustomSelectWrapper>
-              </Field>
+              </FormGroup>
 
-              <Field>
-                <Label htmlFor="double_major">이중/부전공</Label>
+              <FormGroup>
+                <Label>이중/부전공 *</Label>
                 <CustomSelectWrapper>
                   <Select
-                    id="double_major"
                     name="double_major"
                     value={formData.double_major}
                     onChange={handleInputChange}
@@ -539,16 +569,15 @@ export default function SignUp() {
                   </Select>
                   <SelectArrow />
                 </CustomSelectWrapper>
-              </Field>
+              </FormGroup>
             </>
           )}
+
           {formData.double_major === "융합인재학부" && (
-            <Field>
-              <Label htmlFor="modules">모듈 선택</Label>
+            <FormGroup>
+              <Label>모듈 선택 *</Label>
               <CustomSelectWrapper>
-                {" "}
                 <Select
-                  id="modules"
                   name="modules"
                   value={formData.modules?.[0] || ""}
                   onChange={(e) => {
@@ -557,8 +586,8 @@ export default function SignUp() {
                       modules: e.target.value ? [e.target.value] : null,
                     }));
                   }}
+                  required
                 >
-                  {" "}
                   <option value="" disabled>
                     모듈을 선택하세요
                   </option>
@@ -570,14 +599,14 @@ export default function SignUp() {
                 </Select>
                 <SelectArrow />
               </CustomSelectWrapper>
-            </Field>
-          )}{" "}
+            </FormGroup>
+          )}
+
           <Row>
-            <Field style={{ flex: 1 }}>
-              <Label htmlFor="grade">학년</Label>
+            <FormGroup style={{ flex: 1 }}>
+              <Label>학년 *</Label>
               <CustomSelectWrapper>
                 <Select
-                  id="grade"
                   name="grade"
                   value={formData.grade}
                   onChange={handleInputChange}
@@ -593,12 +622,12 @@ export default function SignUp() {
                 </Select>
                 <SelectArrow />
               </CustomSelectWrapper>
-            </Field>
-            <Field style={{ flex: 1 }}>
-              <Label htmlFor="semester">학기</Label>
+            </FormGroup>
+
+            <FormGroup style={{ flex: 1 }}>
+              <Label>학기 *</Label>
               <CustomSelectWrapper>
                 <Select
-                  id="semester"
                   name="semester"
                   value={formData.semester}
                   onChange={handleInputChange}
@@ -612,11 +641,26 @@ export default function SignUp() {
                 </Select>
                 <SelectArrow />
               </CustomSelectWrapper>
-            </Field>
+            </FormGroup>
           </Row>
-          <Button type="submit">Sign Up</Button>
-        </Form>
-      </FormWrapper>
+
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          {success && <SuccessMessage>{success}</SuccessMessage>}
+
+          <ButtonGroup>
+            <CancelButton
+              type="button"
+              onClick={() => navigate("/mypage")}
+              disabled={loading}
+            >
+              취소
+            </CancelButton>
+            <SaveButton type="submit" disabled={loading}>
+              {loading ? "저장 중..." : "저장하기"}
+            </SaveButton>
+          </ButtonGroup>
+        </form>
+      </FormCard>
     </Container>
   );
 }
