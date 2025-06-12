@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import NavBarComponent from "../Components/NavBar";
 import { HiOutlineX } from "react-icons/hi";
+import NavBarComponent from "../Components/NavBar";
+import { useNavigate } from "react-router-dom";
 
 const SUBJECTS = {
-  "V41009201": { name: "운영체제", desc: "AI 융합전공 | 교수명" },
-  "T07201201": { name: "컴퓨터 구조", desc: "AI 융합전공 | 교수명" },
-  "T07403201": { name: "종합설계", desc: "AI 융합전공 | 교수명" },
+  V41009201: { name: "운영체제", desc: "AI 융합전공 | 교수명" },
+  T07201201: { name: "컴퓨터 구조", desc: "AI 융합전공 | 교수명" },
+  T07403201: { name: "종합설계", desc: "AI 융합전공 | 교수명" },
 };
 
 const Container = styled.div`
@@ -124,6 +125,7 @@ const RemoveButton = styled.button`
 `;
 
 export default function Essential() {
+  const navigate = useNavigate();
   const [input, setInput] = useState("");
   const [selected, setSelected] = useState(null);
   const [essentialList, setEssentialList] = useState([
@@ -142,14 +144,14 @@ export default function Essential() {
 
   const handleApply = () => {
     if (selected) {
-      setEssentialList(list => [...list, selected]);
+      setEssentialList((list) => [...list, selected]);
       setInput("");
       setSelected(null);
     }
   };
 
-  const handleRemove = idx => {
-    setEssentialList(list => list.filter((_, i) => i !== idx));
+  const handleRemove = (idx) => {
+    setEssentialList((list) => list.filter((_, i) => i !== idx));
   };
 
   return (
@@ -157,18 +159,20 @@ export default function Essential() {
       <Inner>
         <Label>필수 과목 설정</Label>
         <Description>
-          이번 학기 시간표에 필수적으로 넣고 싶은<br />
+          이번 학기 시간표에 필수적으로 넣고 싶은
+          <br />
           과목의 학수 번호를 입력해 주세요
         </Description>
         <Notice>
           주의사항 :<br />
-          본인이 듣고자 하는 최대 학점을 초과한 필수 과목 설정이<br />
+          본인이 듣고자 하는 최대 학점을 초과한 필수 과목 설정이
+          <br />
           불가능하며, 선택한 과목들은 시간표 생성 시 우선 반영됩니다
         </Notice>
         <Input
           placeholder="학수 번호를 입력해 주세요"
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
         />
         {selected && (
           <SelectedBox>

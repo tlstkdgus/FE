@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { HiOutlineX } from "react-icons/hi";
+import { useNavigate } from "react-router-dom";
+import { HiArrowLeft, HiOutlineX } from "react-icons/hi";
 import NavBarComponent from "../Components/NavBar";
 
 const SUBJECTS = {
-  "V41009201": { name: "운영체제", desc: "AI융합전공(Software&AI) | 임승호" },
-  "T07201201": { name: "컴퓨터논리개론", desc: "AI융합전공(Software&AI) | 김영란" },
-  "T02253601": { name: "웹프로그래밍", desc: "AI융합전공(Software&AI) | 고석훈" },
-  "T07403201": { name: "종합설계", desc: "AI융합전공(Software&AI) | 고석훈" },
+  V41009201: { name: "운영체제", desc: "AI융합전공(Software&AI) | 임승호" },
+  T07201201: {
+    name: "컴퓨터논리개론",
+    desc: "AI융합전공(Software&AI) | 김영란",
+  },
+  T02253601: { name: "웹프로그래밍", desc: "AI융합전공(Software&AI) | 고석훈" },
+  T07403201: { name: "종합설계", desc: "AI융합전공(Software&AI) | 고석훈" },
 };
 
 const Container = styled.div`
@@ -133,14 +137,14 @@ export default function Exclude() {
 
   const handleApply = () => {
     if (selected) {
-      setExcludeList(list => [...list, selected]);
+      setExcludeList((list) => [...list, selected]);
       setInput("");
       setSelected(null);
     }
   };
 
-  const handleRemove = idx => {
-    setExcludeList(list => list.filter((_, i) => i !== idx));
+  const handleRemove = (idx) => {
+    setExcludeList((list) => list.filter((_, i) => i !== idx));
   };
 
   return (
@@ -148,13 +152,14 @@ export default function Exclude() {
       <Inner>
         <Label>수강한 과목 제외</Label>
         <Description>
-          여러분이 이전에 수강한 과목의<br />
+          여러분이 이전에 수강한 과목의
+          <br />
           학수 번호를 입력해 주세요
         </Description>
         <Input
           placeholder="학수 번호를 입력해 주세요"
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
         />
         {selected && (
           <SelectedBox>
@@ -162,10 +167,7 @@ export default function Exclude() {
             <SubText>{selected.desc}</SubText>
           </SelectedBox>
         )}
-        <Button
-          onClick={handleApply}
-          disabled={!selected}
-        >
+        <Button onClick={handleApply} disabled={!selected}>
           적용하기
         </Button>
         <ListTitle>제외한 과목 리스트</ListTitle>

@@ -9,7 +9,8 @@ import Retake from "./pages/Retake";
 import SignUp from "./pages/SignUp";
 import Setting from "./pages/Setting";
 import SignUpComplete from "./pages/SignUpComplete";
-
+import Credits from "./pages/Credits";
+import EditProfile from "./pages/EditProfile";
 import Create from "./pages/Create";
 import Day from "./pages/Day";
 import Credit from "./pages/Credit";
@@ -25,9 +26,11 @@ const RouterComponent = () => {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/signup-complete" element={<SignUpComplete />} />
       <Route path="/essential" element={<Essential />} />
-      <Route path="/exclude" element={<Exclude />} />
+      <Route path="/exclude" element={<Exclude />} />{" "}
       <Route path="/mypage" element={<MyPage />} />
+      <Route path="/edit-profile" element={<EditProfile />} />
       <Route path="/retake" element={<Retake />} />
+      <Route path="/credits" element={<Credits />} />
       <Route path="/create" element={<Create />} />
       <Route path="/day" element={<Day />} />
       <Route path="/credit" element={<Credit />} />
