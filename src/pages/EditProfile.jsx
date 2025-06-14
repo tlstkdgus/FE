@@ -12,7 +12,7 @@ import { getUserInfo, updateUserProfile } from "../axiosInstance";
 const Container = styled.div`
   width: 100%;
   min-height: 100vh;
-  padding: 16px 20px; /* 헤더 영역 확보 */
+  padding: 16px 20px;
 `;
 
 const FormCard = styled.div`
@@ -213,7 +213,6 @@ export default function EditProfile() {
 
   const [availableMajors, setAvailableMajors] = useState([]);
   const [availableDoubleMajors, setAvailableDoubleMajors] = useState([]);
-  // 초기 데이터 로드
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -242,7 +241,7 @@ export default function EditProfile() {
               college: apiUserData.college || "",
               major: apiUserData.major || "",
               doubleMajorType: apiUserData.doubleMajorType || "NONE",
-              doubleMajorCollege: "", // UI용 필드는 빈 값으로 시작
+              doubleMajorCollege: "",
               double_major: apiUserData.doubleMajor || "",
               modules:
                 [
@@ -478,17 +477,15 @@ export default function EditProfile() {
         formData.modules && formData.modules.length > 0
           ? formData.modules.filter((m) => m && m.trim() !== "")
           : [];
-
       const updateData = {
         name: formData.name,
-        student_id: formData.student_id,
+        studentId: formData.student_id, // 카멜케이스로 변경
         college: formData.college,
         major: formData.major,
-        double_major_type:
-          formData.doubleMajorType === "NONE" ? null : formData.doubleMajorType,
-        double_major: formData.double_major || null,
+        doubleMajorType:
+          formData.doubleMajorType === "NONE" ? null : formData.doubleMajorType, // 카멜케이스로 변경
+        doubleMajor: formData.double_major || null, // 카멜케이스로 변경
         modules: selectedModules.length > 0 ? selectedModules : null,
-        // 개별 모듈 필드 추가 (백엔드 요구사항)
         module1: selectedModules[0] || null,
         module2: selectedModules[1] || null,
         module3: selectedModules[2] || null,
@@ -505,14 +502,27 @@ export default function EditProfile() {
         apiUserId =
           userData.userId || userData.student_id || formData.student_id;
       }
-
       console.log("🔄 EditProfile.jsx - API 호출, userId:", apiUserId);
       const response = await updateUserProfile(apiUserId, updateData);
-      console.log("✅ EditProfile.jsx - 프로필 업데이트 성공:", response);
+      console.log("✅ EditProfile.jsx - 프로필 업데이트 성공:", response); // 프로필 업데이트 성공 후 최신 데이터로 localStorage 업데이트
+      const updatedUserData = {
+        userId: apiUserId, // API 호출에 사용한 userId 유지
+        name: response.name || formData.name,
+        student_id: response.studentId || formData.student_id,
+        college: response.college || formData.college,
+        major: response.major || formData.major,
+        doubleMajorType: response.doubleMajorType || formData.doubleMajorType,
+        double_major: response.doubleMajor || formData.double_major,
+        modules: response.modules || formData.modules,
+        grade: response.grade || formData.grade,
+        semester: response.semester || formData.semester,
+      };
 
-      // localStorage에는 doubleMajorCollege도 포함해서 저장 (UI 상태 유지용)
-      const localStorageData = { ...formData };
-      localStorage.setItem("userData", JSON.stringify(localStorageData));
+      console.log(
+        "💾 EditProfile.jsx - localStorage 업데이트:",
+        updatedUserData
+      );
+      localStorage.setItem("userData", JSON.stringify(updatedUserData));
 
       setSuccess("프로필이 성공적으로 업데이트되었습니다!");
       setTimeout(() => {

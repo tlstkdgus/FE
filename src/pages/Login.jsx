@@ -161,10 +161,18 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      console.log("로그인 데이터:", formData); // 로그인 API 호출
-      const response = await axiosInstance.post("/auth/login", formData);
+      console.log("로그인 데이터:", formData);
+
+      const loginData = {
+        student_id: formData.student_id,
+        password: formData.password,
+      };
+
+      console.log("변환된 로그인 데이터:", loginData);
+
+      // 로그인 API 호출
+      const response = await axiosInstance.post("/auth/login", loginData);
       if (response.status === 200) {
         console.log("🔍 Login.jsx - 로그인 성공 전체 응답:", response.data);
         console.log(

@@ -290,7 +290,6 @@ export default function MyPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const loadUserData = async () => {
       const token = getToken();
@@ -300,76 +299,122 @@ export default function MyPage() {
           // localStorage에서 userId 가져오기 (로그인 시 저장된 값 사용)
           const savedUserData = localStorage.getItem("userData");
           let userId = null;
-
-          console.log("🔍 MyPage.jsx - savedUserData:", savedUserData);
+          
+          console.log("🔍 MyPage.jsx - localStorage에 저장된 데이터:", savedUserData);
+          
           if (savedUserData) {
             const userData = JSON.parse(savedUserData);
-            userId =
-              userData.userId || userData.student_id || userData.studentId;
+            userId = userData.userId || userData.student_id || userData.studentId;
             console.log("🔍 MyPage.jsx - parsed userData:", userData);
             console.log("🔍 MyPage.jsx - extracted userId:", userId);
+            
+            // 모듈이 있으면 doubleMajorType이 null이어도 DOUBLE_MAJOR로 간주
+            if (userData.modules && userData.modules.length > 0 && !userData.doubleMajorType) {
+              console.log("🔧 MyPage.jsx - 모듈이 있으므로 doubleMajorType을 DOUBLE_MAJOR로 설정");
+              userData.doubleMajorType = "DOUBLE_MAJOR";
+              userData.double_major = "융합인재학부";
+              localStorage.setItem("userData", JSON.stringify(userData));
+            }
           }
-
+          
           if (userId) {
             console.log("🚀 MyPage.jsx - API 호출 시작, userId:", userId);
             // API로 최신 사용자 정보 가져오기
-            const apiUserData = await getUserInfo(userId);
-            console.log("✅ MyPage.jsx - API 응답 데이터:", apiUserData);
+            try {
+              const apiUserData = await getUserInfo(userId);
+              console.log("✅ MyPage.jsx - API 응답 데이터:", apiUserData);
 
-            // API 응답을 기존 형식에 맞게 변환
-            const formattedUser = {
-              name: apiUserData.name || "사용자",
-              major: apiUserData.major || "전공 미설정",
-              studentId: apiUserData.studentId,
-              college: apiUserData.college,
-              doubleMajor: apiUserData.doubleMajor || "",
-              doubleMajorType: apiUserData.doubleMajorType,
-              modules: [
-                apiUserData.module1,
-                apiUserData.module2,
-                apiUserData.module3,
-              ].filter(Boolean),
-              grade: apiUserData.grade,
-              semester: apiUserData.semester,
-            };
+              // API 응답을 기존 형식에 맞게 변환
+              const formattedUser = {
+                name: apiUserData.name || "사용자",
+                major: apiUserData.major || "전공 미설정",
+                studentId: apiUserData.studentId,
+                college: apiUserData.college,
+                doubleMajor: apiUserData.doubleMajor || "",
+                doubleMajorType: apiUserData.doubleMajorType,
+                modules: [
+                  apiUserData.module1,
+                  apiUserData.module2,
+                  apiUserData.module3,
+                ].filter(Boolean),
+                grade: apiUserData.grade,
+                semester: apiUserData.semester,
+              };
 
-            console.log("🔄 MyPage.jsx - 변환된 사용자 데이터:", formattedUser);
-            setUser(formattedUser); // localStorage에도 업데이트된 정보 저장
-            const updatedUserData = {
-              userId: userId, // API 호출에 사용한 userId 저장
-              name: apiUserData.name,
-              student_id: apiUserData.studentId,
-              college: apiUserData.college,
-              major: apiUserData.major,
-              doubleMajorType: apiUserData.doubleMajorType,
-              double_major: apiUserData.doubleMajor,
-              modules: [
-                apiUserData.module1,
-                apiUserData.module2,
-                apiUserData.module3,
-              ].filter(Boolean),
-              grade: apiUserData.grade,
-              semester: apiUserData.semester,
-            };
-            localStorage.setItem("userData", JSON.stringify(updatedUserData));
-            console.log(
-              "💾 MyPage.jsx - localStorage에 저장된 데이터:",
-              updatedUserData
-            );
+              console.log("🔄 MyPage.jsx - 변환된 사용자 데이터:", formattedUser);
+              setUser(formattedUser); 
+              
+              // localStorage에도 업데이트된 정보 저장
+              const updatedUserData = {
+                userId: userId, // API 호출에 사용한 userId 저장
+                name: apiUserData.name,
+                student_id: apiUserData.studentId,
+                college: apiUserData.college,
+                major: apiUserData.major,
+                doubleMajorType: apiUserData.doubleMajorType,
+                double_major: apiUserData.doubleMajor,
+                modules: [
+                  apiUserData.module1,
+                  apiUserData.module2,
+                  apiUserData.module3,
+                ].filter(Boolean),
+                grade: apiUserData.grade,
+                semester: apiUserData.semester,
+              };
+              localStorage.setItem("userData", JSON.stringify(updatedUserData));
+              console.log("💾 MyPage.jsx - localStorage에 저장된 데이터:", updatedUserData);
+            } catch (apiError) {
+              console.warn("⚠️ MyPage.jsx - API 호출 실패, localStorage 데이터 사용:", apiError.message);
+              // API 호출 실패 시 localStorage 데이터로 폴백
+              if (savedUserData) {
+                const userData = JSON.parse(savedUserData);
+                
+                // 모듈이 있으면 doubleMajorType이 null이어도 DOUBLE_MAJOR로 간주
+                let doubleMajorType = userData.doubleMajorType;
+                let doubleMajor = userData.double_major;
+                
+                if (userData.modules && userData.modules.length > 0 && !doubleMajorType) {
+                  console.log("🔧 MyPage.jsx - 폴백 시 모듈이 있으므로 doubleMajorType을 DOUBLE_MAJOR로 설정");
+                  doubleMajorType = "DOUBLE_MAJOR";
+                  doubleMajor = "융합인재학부";
+                }
+                
+                setUser({
+                  name: userData.name || "사용자",
+                  major: userData.major || "전공 미설정",
+                  studentId: userData.student_id || userData.studentId || "",
+                  college: userData.college,
+                  doubleMajor: doubleMajor || "",
+                  doubleMajorType: doubleMajorType,
+                  modules: userData.modules || [],
+                  grade: userData.grade,
+                  semester: userData.semester,
+                });
+              }
+            }
           } else {
-            console.log(
-              "⚠️ MyPage.jsx - userId가 없어서 localStorage 데이터 사용"
-            );
+            console.log("⚠️ MyPage.jsx - userId가 없어서 localStorage 데이터 사용");
             // userId가 없으면 localStorage 데이터 사용
             if (savedUserData) {
               const userData = JSON.parse(savedUserData);
+              
+              // 모듈이 있으면 doubleMajorType이 null이어도 DOUBLE_MAJOR로 간주
+              let doubleMajorType = userData.doubleMajorType;
+              let doubleMajor = userData.double_major;
+              
+              if (userData.modules && userData.modules.length > 0 && !doubleMajorType) {
+                console.log("🔧 MyPage.jsx - userId 없을 때 모듈이 있으므로 doubleMajorType을 DOUBLE_MAJOR로 설정");
+                doubleMajorType = "DOUBLE_MAJOR";
+                doubleMajor = "융합인재학부";
+              }
+              
               setUser({
                 name: userData.name || "사용자",
                 major: userData.major || "전공 미설정",
                 studentId: userData.student_id || userData.studentId || "",
                 college: userData.college,
-                doubleMajor: userData.double_major || "",
-                doubleMajorType: userData.doubleMajorType,
+                doubleMajor: doubleMajor || "",
+                doubleMajorType: doubleMajorType,
                 modules: userData.modules || [],
                 grade: userData.grade,
                 semester: userData.semester,
@@ -391,21 +436,30 @@ export default function MyPage() {
           }
         } catch (error) {
           console.error("❌ MyPage.jsx - 사용자 정보 로드 오류:", error);
-          console.error(
-            "❌ MyPage.jsx - 오류 상세:",
-            error.response?.data || error.message
-          );
+          console.error("❌ MyPage.jsx - 오류 상세:", error.response?.data || error.message);
+          
           // API 오류 시 localStorage 데이터로 폴백
           const savedUserData = localStorage.getItem("userData");
           if (savedUserData) {
             const userData = JSON.parse(savedUserData);
+            
+            // 모듈이 있으면 doubleMajorType이 null이어도 DOUBLE_MAJOR로 간주
+            let doubleMajorType = userData.doubleMajorType;
+            let doubleMajor = userData.double_major;
+            
+            if (userData.modules && userData.modules.length > 0 && !doubleMajorType) {
+              console.log("🔧 MyPage.jsx - 폴백 시 모듈이 있으므로 doubleMajorType을 DOUBLE_MAJOR로 설정");
+              doubleMajorType = "DOUBLE_MAJOR";
+              doubleMajor = "융합인재학부";
+            }
+            
             setUser({
               name: userData.name || "사용자",
               major: userData.major || "전공 미설정",
               studentId: userData.student_id || userData.studentId || "",
               college: userData.college,
-              doubleMajor: userData.double_major || "",
-              doubleMajorType: userData.doubleMajorType,
+              doubleMajor: doubleMajor || "",
+              doubleMajorType: doubleMajorType,
               modules: userData.modules || [],
               grade: userData.grade,
               semester: userData.semester,

@@ -242,22 +242,21 @@ export default function SignUp() {
         formData.modules && formData.modules.length > 0
           ? formData.modules.filter((m) => m && m.trim() !== "")
           : [];
-
       const submitData = {
-        student_id: formData.student_id.trim(),
+        studentId: formData.student_id.trim(), // 백엔드용 카멜케이스
         password: formData.password.trim(),
         name: formData.name.trim(),
         college: formData.college.trim(),
         major: formData.major.trim(),
-        double_major_type:
+        doubleMajorType:
           formData.doubleMajorType && formData.doubleMajorType.trim() !== ""
             ? formData.doubleMajorType.trim()
-            : "NONE", // null 대신 기본값 "NONE" 사용
-        double_major: ["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(
+            : "NONE",
+        doubleMajor: ["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(
           formData.doubleMajorType
         )
-          ? formData.double_major
-            ? formData.double_major.trim()
+          ? formData.doubleMajor
+            ? formData.doubleMajor.trim()
             : null
           : null,
         modules: selectedModules.length > 0 ? selectedModules : null,
@@ -271,12 +270,12 @@ export default function SignUp() {
       console.log("📤 회원가입 데이터 전송:", submitData);
       console.log("📋 각 필드 검증:");
       console.log(
-        "- student_id:",
-        submitData.student_id,
+        "- studentId:",
+        submitData.studentId,
         "타입:",
-        typeof submitData.student_id,
+        typeof submitData.studentId,
         "길이:",
-        submitData.student_id?.length
+        submitData.studentId?.length
       );
       console.log(
         "- password:",
@@ -307,16 +306,16 @@ export default function SignUp() {
         typeof submitData.major
       );
       console.log(
-        "- double_major_type:",
-        submitData.double_major_type,
+        "- doubleMajorType:",
+        submitData.doubleMajorType,
         "타입:",
-        typeof submitData.double_major_type
+        typeof submitData.doubleMajorType
       );
       console.log(
-        "- double_major:",
-        submitData.double_major,
+        "- doubleMajor:",
+        submitData.doubleMajor,
         "타입:",
-        typeof submitData.double_major
+        typeof submitData.doubleMajor
       );
       console.log(
         "- modules:",
@@ -359,8 +358,8 @@ export default function SignUp() {
           ([key, value]) =>
             value === null &&
             ![
-              "double_major_type",
-              "double_major",
+              "doubleMajorType",
+              "doubleMajor",
               "modules",
               "module1",
               "module2",
@@ -378,23 +377,25 @@ export default function SignUp() {
       // 회원가입 API 호출
       const response = await axiosInstance.post("/auth/signup", submitData);
       if (response.status === 200 || response.status === 201) {
-        console.log("✅ 회원가입 성공:", response.data);
-
-        // 회원가입 성공 시 사용자 정보를 localStorage에 저장
-        // 응답에서 받은 id를 userId로 사용
+        console.log("✅ 회원가입 성공:", response.data); // 회원가입 성공 시 사용자 정보를 localStorage에 저장        // 응답에서 받은 id를 userId로 사용
         const userData = {
           userId: response.data.id, // API 호출용 ID
           name: response.data.name || submitData.name,
-          student_id: response.data.student_id || submitData.student_id, // 학번 (표시용)
+          student_id: response.data.studentId || formData.student_id, // 학번 (표시용)
           college: response.data.college || submitData.college,
           major: response.data.major || submitData.major,
           doubleMajorType:
-            response.data.doubleMajorType || submitData.double_major_type,
-          double_major: response.data.double_major || submitData.double_major,
+            response.data.doubleMajorType || submitData.doubleMajorType,
+          double_major: response.data.doubleMajor || formData.double_major,
           modules: response.data.modules || submitData.modules,
           grade: response.data.grade || submitData.grade,
           semester: response.data.semester || submitData.semester,
         };
+
+        console.log("🔍 SignUp.jsx - API 응답 데이터:", response.data);
+        console.log("🔍 SignUp.jsx - 전송한 submitData:", submitData);
+        console.log("🔍 SignUp.jsx - 최종 저장할 userData:", userData);
+
         localStorage.setItem("userData", JSON.stringify(userData));
         console.log(
           "💾 SignUp.jsx - localStorage에 사용자 정보 저장:",
