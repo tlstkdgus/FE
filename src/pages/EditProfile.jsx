@@ -414,7 +414,6 @@ export default function EditProfile() {
       }));
     }
   }, [formData.doubleMajorType, formData.double_major]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
@@ -422,6 +421,27 @@ export default function EditProfile() {
         ...prev,
         [name]: value,
       };
+
+      // college가 변경될 때 major 초기화
+      if (name === "college") {
+        newData.major = "";
+      }
+
+      // doubleMajorType이 변경될 때 관련 필드 초기화
+      if (name === "doubleMajorType") {
+        if (!["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(value)) {
+          newData.doubleMajorCollege = "";
+          newData.double_major = "";
+          newData.modules = null;
+        } else if (
+          value !== "DOUBLE_MAJOR" &&
+          prev.doubleMajorCollege === "융합전공"
+        ) {
+          // 이중전공이 아닌 다른 타입으로 변경 시 융합전공이 선택되어 있으면 초기화
+          newData.doubleMajorCollege = "";
+          newData.double_major = "";
+        }
+      }
 
       // doubleMajorCollege가 변경될 때 double_major 초기화
       if (name === "doubleMajorCollege") {
@@ -453,9 +473,12 @@ export default function EditProfile() {
         !formData.semester
       ) {
         throw new Error("필수 항목을 모두 입력해주세요.");
-      }
+      } // 백엔드로 보낼 데이터 (doubleMajorCollege는 제외)
+      const selectedModules =
+        formData.modules && formData.modules.length > 0
+          ? formData.modules.filter((m) => m && m.trim() !== "")
+          : [];
 
-      // 백엔드로 보낼 데이터 (doubleMajorCollege는 제외)
       const updateData = {
         name: formData.name,
         student_id: formData.student_id,
@@ -464,7 +487,11 @@ export default function EditProfile() {
         double_major_type:
           formData.doubleMajorType === "NONE" ? null : formData.doubleMajorType,
         double_major: formData.double_major || null,
-        modules: formData.modules,
+        modules: selectedModules.length > 0 ? selectedModules : null,
+        // 개별 모듈 필드 추가 (백엔드 요구사항)
+        module1: selectedModules[0] || null,
+        module2: selectedModules[1] || null,
+        module3: selectedModules[2] || null,
         grade: parseInt(formData.grade) || 1,
         semester: parseInt(formData.semester) || 1,
       };
@@ -607,6 +634,7 @@ export default function EditProfile() {
             formData.doubleMajorType === "MINOR" ||
             formData.doubleMajorType === "INTENSIVE_MINOR") && (
             <>
+              {" "}
               <FormGroup>
                 <Label>이중/부전공 단과대학 *</Label>
                 <CustomSelectWrapper>
@@ -624,11 +652,14 @@ export default function EditProfile() {
                         {college}
                       </option>
                     ))}
+                    {/* 이중전공 타입일 때만 융합전공 옵션 추가 */}
+                    {formData.doubleMajorType === "DOUBLE_MAJOR" && (
+                      <option value="융합전공">융합전공</option>
+                    )}
                   </Select>
                   <SelectArrow />
                 </CustomSelectWrapper>
               </FormGroup>
-
               <FormGroup>
                 <Label>이중/부전공 *</Label>
                 <CustomSelectWrapper>
@@ -657,33 +688,90 @@ export default function EditProfile() {
                 </CustomSelectWrapper>
               </FormGroup>
             </>
-          )}
+          )}{" "}
           {formData.double_major === "융합인재학부" && (
             <FormGroup>
-              <Label>모듈 선택 *</Label>
-              <CustomSelectWrapper>
-                <Select
-                  name="modules"
-                  value={formData.modules?.[0] || ""}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      modules: e.target.value ? [e.target.value] : null,
-                    }));
-                  }}
-                  required
-                >
-                  <option value="" disabled>
-                    모듈을 선택하세요
-                  </option>
-                  {FUSION_MODULES.map((module) => (
-                    <option key={module} value={module}>
+              <Label>모듈 선택 (최대 3개)</Label>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                {FUSION_MODULES.map((module) => (
+                  <div
+                    key={module}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      id={`module-${module}`}
+                      checked={formData.modules?.includes(module) || false}
+                      onChange={(e) => {
+                        setFormData((prev) => {
+                          const currentModules = prev.modules || [];
+                          if (e.target.checked) {
+                            // 최대 3개까지만 선택 가능
+                            if (currentModules.length < 3) {
+                              return {
+                                ...prev,
+                                modules: [...currentModules, module],
+                              };
+                            } else {
+                              alert(
+                                "모듈은 최대 3개까지만 선택할 수 있습니다."
+                              );
+                              return prev;
+                            }
+                          } else {
+                            // 체크 해제
+                            const newModules = currentModules.filter(
+                              (m) => m !== module
+                            );
+                            return {
+                              ...prev,
+                              modules:
+                                newModules.length > 0 ? newModules : null,
+                            };
+                          }
+                        });
+                      }}
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        accentColor: "var(--brand)",
+                      }}
+                    />
+                    <label
+                      htmlFor={`module-${module}`}
+                      style={{
+                        fontSize: "var(--body-default)",
+                        cursor: "pointer",
+                        userSelect: "none",
+                      }}
+                    >
                       {module}
-                    </option>
-                  ))}
-                </Select>
-                <SelectArrow />
-              </CustomSelectWrapper>
+                    </label>
+                  </div>
+                ))}
+                {formData.modules && formData.modules.length > 0 && (
+                  <div
+                    style={{
+                      fontSize: "var(--body-small)",
+                      color: "var(--brand)",
+                      marginTop: "4px",
+                    }}
+                  >
+                    선택된 모듈: {formData.modules.join(", ")} (
+                    {formData.modules.length}/3)
+                  </div>
+                )}
+              </div>
             </FormGroup>
           )}
           <Row>
