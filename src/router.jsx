@@ -16,7 +16,6 @@ import Day from "./pages/Day";
 import Credit from "./pages/Credit";
 import Combination from "./pages/Combination";
 import Result from "./pages/Result";
-import DetailedCredit from "./pages/DetailedCredit";
 const RouterComponent = () => {
   return (
     <Routes>
@@ -35,7 +34,6 @@ const RouterComponent = () => {
       <Route path="/day" element={<Day />} />
       <Route path="/credit" element={<Credit />} />
       <Route path="/combination" element={<Combination />} />
-      <Route path="/detailedcredit" element={<DetailedCredit />} />
       <Route path="/result" element={<Result />} />
     </Routes>
   );
