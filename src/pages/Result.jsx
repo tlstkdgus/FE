@@ -1,9 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import {
-  BarContainer,
-  StepBar,
-  DefaultBar,
   PageWrapper,
   ContentWrapper,
   TitleWrapper,
@@ -142,17 +139,6 @@ const SubtableWrapper = styled.div`
   align-items: center;
   gap: 24px;
   align-self: stretch;
-`;
-
-const SelectTable = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  flex: 1 0 0;
-  align-self: stretch;
-  border-radius: 4px;
-  border: 3px solid #305ff8;
 `;
 
 const days = ["월", "화", "수", "목", "금"];
@@ -317,18 +303,6 @@ const combinations = [
   { key: "major_minor_charity", label: "전공+이중/부전공+자선" },
   { key: "all", label: "전과목" },
 ];
-const allDayTimes = [
-  "월-1",
-  "월-2",
-  "화-1",
-  "화-2",
-  "수-1",
-  "수-2",
-  "목-1",
-  "목-2",
-  "금-1",
-  "금-2",
-];
 
 const ModalBg = styled.div`
   position: fixed;
@@ -374,6 +348,8 @@ const DropdownItem = styled.div`
 export default function Result() {
   const navigate = useNavigate();
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const [timetableList, setTimetableList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const {
     combination,
     setCombination,
@@ -381,10 +357,105 @@ export default function Result() {
     setCredit,
     detailedCredit,
     selectedDays,
-    setSelectedDays,
   } = useSchedule();
   const [showDayModal, setShowDayModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  // 추천 시간표 데이터 로드
+  useEffect(() => {
+    const loadRecommendedTimetables = () => {
+      try {
+        const savedTimetables = localStorage.getItem("recommendedTimetables");
+        if (savedTimetables) {
+          const parsedTimetables = JSON.parse(savedTimetables);
+          console.log("✅ Result.jsx - 저장된 추천 시간표:", parsedTimetables);
+
+          // API 응답 형식에 따라 데이터 처리
+          if (
+            parsedTimetables.timetables &&
+            Array.isArray(parsedTimetables.timetables)
+          ) {
+            setTimetableList(parsedTimetables.timetables);
+          } else if (Array.isArray(parsedTimetables)) {
+            setTimetableList(parsedTimetables);
+          } else {
+            console.warn(
+              "⚠️ Result.jsx - 예상되지 않은 시간표 데이터 형식:",
+              parsedTimetables
+            );
+            // 기본 예시 데이터 사용
+            setTimetableList(getDefaultTimetables());
+          }
+        } else {
+          console.warn(
+            "⚠️ Result.jsx - 저장된 추천 시간표가 없습니다. 기본 데이터를 사용합니다."
+          );
+          setTimetableList(getDefaultTimetables());
+        }
+      } catch (error) {
+        console.error("❌ Result.jsx - 추천 시간표 로드 오류:", error);
+        setTimetableList(getDefaultTimetables());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRecommendedTimetables();
+  }, []);
+
+  // 기본 예시 시간표 데이터
+  const getDefaultTimetables = () => {
+    return [
+      [
+        {
+          subject: "웹 프로그래밍",
+          professor: "김00",
+          day: "월",
+          start: "3",
+          end: "5",
+        },
+        {
+          subject: "체육(요가)",
+          professor: "김00",
+          day: "화",
+          start: "2",
+          end: "3",
+        },
+        {
+          subject: "컴퓨터 논리 개론",
+          professor: "김00",
+          day: "목",
+          start: "6",
+          end: "7",
+        },
+      ],
+      [
+        {
+          subject: "컴퓨터 수학",
+          professor: "김00",
+          day: "화",
+          start: "5",
+          end: "7",
+        },
+        {
+          subject: "알고리즘",
+          professor: "김00",
+          day: "수",
+          start: "4",
+          end: "6",
+        },
+      ],
+      [
+        {
+          subject: "데이터베이스",
+          professor: "김00",
+          day: "월",
+          start: "1",
+          end: "3",
+        },
+      ],
+    ];
+  };
 
   // (예시) 현재 선택된 조건을 콘솔에 출력
   React.useEffect(() => {
@@ -394,92 +465,19 @@ export default function Result() {
     console.log("상세학점:", detailedCredit);
   }, [combination, selectedDays, credit, detailedCredit]);
 
-  // 예시용 3개의 시간표 데이터
-  const timetableList = [
-    [
-      {
-        subject: "웹 프로그래밍",
-        professor: "김00",
-        day: "월",
-        start: "12",
-        end: "3",
-      },
-      {
-        subject: "체육(요가)",
-        professor: "김00",
-        day: "화",
-        start: "11",
-        end: "1",
-      },
-      {
-        subject: "컴퓨터 수학",
-        professor: "김00",
-        day: "화",
-        start: "3",
-        end: "6",
-      },
-      {
-        subject: "컴퓨터 논리 개론",
-        professor: "김00",
-        day: "목",
-        start: "6",
-        end: "7",
-      },
-      {
-        subject: "알고리즘",
-        professor: "김00",
-        day: "수",
-        start: "4",
-        end: "6",
-      },
-    ],
-    [
-      {
-        subject: "컴퓨터 논리 개론",
-        professor: "김00",
-        day: "목",
-        start: "6",
-        end: "7",
-      },
-      {
-        subject: "컴퓨터 수학",
-        professor: "김00",
-        day: "화",
-        start: "3",
-        end: "6",
-      },
-      {
-        subject: "체육(요가)",
-        professor: "김00",
-        day: "화",
-        start: "11",
-        end: "1",
-      },
-      {
-        subject: "알고리즘",
-        professor: "김00",
-        day: "수",
-        start: "4",
-        end: "6",
-      },
-    ],
-    [
-      {
-        subject: "웹 프로그래밍",
-        professor: "김00",
-        day: "월",
-        start: "2",
-        end: "4",
-      },
-      {
-        subject: "컴퓨터 수학",
-        professor: "김00",
-        day: "화",
-        start: "5",
-        end: "7",
-      },
-    ],
-  ];
+  // 로딩 중일 때 표시할 컴포넌트
+  if (loading) {
+    return (
+      <PageWrapper>
+        <ContentWrapper>
+          <TitleWrapper>
+            <Title>추천 시간표를 생성하는 중...</Title>
+            <Subtitle>잠시만 기다려주세요</Subtitle>
+          </TitleWrapper>
+        </ContentWrapper>
+      </PageWrapper>
+    );
+  }
 
   // 시간표에 있는 모든 과목을 추출하여 중복 제거
   const allSubjects = Array.from(
@@ -491,18 +489,28 @@ export default function Result() {
   // 모든 시간표에서 사용할 일관된 과목 색상 생성
   const subjectColors = generateSubjectColors(allSubjects);
 
-  // 요일/시간대 모달 내부 선택 핸들러
-  const toggleDay = (dt) => {
-    setSelectedDays((prev) =>
-      prev.includes(dt) ? prev.filter((d) => d !== dt) : [...prev, dt]
-    );
-  };
-
   // 최소/최대 학점 기본값 처리
   const minCredit =
     credit.min || detailedCredit.minor || detailedCredit.liberal || "";
   const maxCredit =
     credit.max || detailedCredit.minorMax || detailedCredit.liberalMax || "";
+
+  // 시간표가 없을 때 처리
+  if (!timetableList || timetableList.length === 0) {
+    return (
+      <PageWrapper>
+        <ContentWrapper>
+          <TitleWrapper>
+            <Title>추천 시간표가 없습니다</Title>
+            <Subtitle>설정을 다시 확인해주세요</Subtitle>
+          </TitleWrapper>
+          <NextButton onClick={() => navigate("/credit")}>
+            설정 다시 하기
+          </NextButton>
+        </ContentWrapper>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper>
@@ -636,7 +644,7 @@ export default function Result() {
       </SubTextContainer>
       <TimetableWrapper>
         <Timetable
-          data={timetableList[selectedIdx]}
+          data={timetableList[selectedIdx] || []}
           subjectColors={subjectColors}
         />
       </TimetableWrapper>
@@ -653,9 +661,10 @@ export default function Result() {
       </SubtableWrapper>
       <NextButton
         onClick={() => {
+          const selectedTimetable = timetableList[selectedIdx] || [];
           localStorage.setItem(
             "finalTimetable",
-            JSON.stringify(timetableList[selectedIdx])
+            JSON.stringify(selectedTimetable)
           );
           navigate("/main");
         }}
