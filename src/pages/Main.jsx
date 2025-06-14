@@ -48,6 +48,7 @@ const CenterCard = styled(Card)`
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   position: relative;
   overflow: hidden;
+  cursor: default;
 
   &::before {
     content: "";
@@ -71,6 +72,7 @@ const CenterCard = styled(Card)`
 
   &:hover {
     background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    transform: none;
   }
 `;
 
@@ -160,6 +162,9 @@ const Button = styled.button`
   transition: all 0.3s ease;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(48, 95, 248, 0.1);
+  pointer-events: auto; /* 명시적으로 클릭 가능하도록 설정 */
+  position: relative;
+  z-index: 1000; /* 매우 높은 z-index 설정 */
 
   &:hover {
     background: var(--brand);
@@ -170,6 +175,12 @@ const Button = styled.button`
 
   &:active {
     transform: translateY(0);
+    background: #1e40af; /* 클릭 시 더 어두운 색상 */
+  }
+
+  &:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
   }
 `;
 
@@ -359,14 +370,20 @@ export default function Main() {
           </Button>
         </Card>
       ) : (
-        <CenterCard>
+        <CenterCard onClick={(e) => e.stopPropagation()}>
           <BsExclamationCircle style={{ width: 64, height: 64 }} />
           <GuideText>
             아직 생성된 시간표가 없어요!
             <br />
             시간표를 생성하러 가 볼까요?
-          </GuideText>
-          <Button onClick={() => navigate("/create")}>
+          </GuideText>{" "}
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log("시간표 생성하기 버튼 클릭됨!");
+              navigate("/create");
+            }}
+          >
             시간표 생성하기{" "}
             <span style={{ fontSize: "18px", fontWeight: 700 }}>&rarr;</span>
           </Button>

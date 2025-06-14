@@ -1,23 +1,23 @@
 import styled from "styled-components";
 
 export const BarContainer = styled.div`
-    display: flex;
-    width: 320px;
-    align-items: center;
-    justify-content: center;
-`
+  display: flex;
+  width: 320px;
+  align-items: center;
+  justify-content: center;
+`;
 
 export const StepBar = styled.div`
-    height: 3px;
-    flex: 1 0 0;
-    background: #305FF8;
-`
+  height: 3px;
+  flex: 1 0 0;
+  background: #305ff8;
+`;
 
 export const DefaultBar = styled.div`
-    height: 3px;
-    flex: 1 0 0;
-    background: #D9D9D9;
-`
+  height: 3px;
+  flex: 1 0 0;
+  background: #d9d9d9;
+`;
 
 export const PageWrapper = styled.div`
   display: flex;
@@ -27,7 +27,6 @@ export const PageWrapper = styled.div`
   background: #fff;
   gap: 32px;
 `;
-
 
 export const ContentWrapper = styled.div`
   width: 100%;
@@ -50,7 +49,7 @@ export const TitleWrapper = styled.div`
 `;
 
 export const Title = styled.div`
-  font-family: 'Pretendard', sans-serif;
+  font-family: "Pretendard", sans-serif;
   font-size: 22px;
   font-weight: 600;
   color: #111;
@@ -61,7 +60,7 @@ export const Title = styled.div`
 `;
 
 export const Subtitle = styled.div`
-  font-family: 'Pretendard', sans-serif;
+  font-family: "Pretendard", sans-serif;
   font-size: 16px;
   font-weight: 400;
   color: #111;
@@ -72,13 +71,13 @@ export const Subtitle = styled.div`
 `;
 
 export const NextButton = styled.button`
-  width: 100%;
+  width: 320px;
   height: 64px;
-  background: #305FF8;
+  background: #305ff8;
   border-radius: 10px;
   border: none;
   color: #fff;
-  font-family: 'Pretendard', sans-serif;
+  font-family: "Pretendard", sans-serif;
   font-size: 20px;
   font-weight: 600;
   cursor: pointer;
