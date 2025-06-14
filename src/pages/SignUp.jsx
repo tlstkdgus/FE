@@ -184,6 +184,13 @@ export default function SignUp() {
           newData.doubleMajorCollege = "";
           newData.double_major = "";
           newData.modules = null;
+        } else if (
+          value !== "DOUBLE_MAJOR" &&
+          prev.doubleMajorCollege === "융합전공"
+        ) {
+          // 이중전공이 아닌 다른 타입으로 변경 시 융합전공이 선택되어 있으면 초기화
+          newData.doubleMajorCollege = "";
+          newData.double_major = "";
         }
       }
 
@@ -231,6 +238,11 @@ export default function SignUp() {
     }
     try {
       // API 호출을 위한 데이터 준비 - null 값 방지 및 기본값 설정
+      const selectedModules =
+        formData.modules && formData.modules.length > 0
+          ? formData.modules.filter((m) => m && m.trim() !== "")
+          : [];
+
       const submitData = {
         student_id: formData.student_id.trim(),
         password: formData.password.trim(),
@@ -248,15 +260,14 @@ export default function SignUp() {
             ? formData.double_major.trim()
             : null
           : null,
-        modules:
-          formData.modules && formData.modules.length > 0
-            ? formData.modules.filter((m) => m && m.trim() !== "")
-            : null,
+        modules: selectedModules.length > 0 ? selectedModules : null,
+        // 개별 모듈 필드 추가 (백엔드 요구사항)
+        module1: selectedModules[0] || null,
+        module2: selectedModules[1] || null,
+        module3: selectedModules[2] || null,
         grade: parseInt(formData.grade) || 1,
         semester: parseInt(formData.semester) || 1,
-      };
-
-      // 데이터 검증 로깅
+      }; // 데이터 검증 로깅
       console.log("📤 회원가입 데이터 전송:", submitData);
       console.log("📋 각 필드 검증:");
       console.log(
@@ -314,6 +325,24 @@ export default function SignUp() {
         typeof submitData.modules
       );
       console.log(
+        "- module1:",
+        submitData.module1,
+        "타입:",
+        typeof submitData.module1
+      );
+      console.log(
+        "- module2:",
+        submitData.module2,
+        "타입:",
+        typeof submitData.module2
+      );
+      console.log(
+        "- module3:",
+        submitData.module3,
+        "타입:",
+        typeof submitData.module3
+      );
+      console.log(
         "- grade:",
         submitData.grade,
         "타입:",
@@ -324,14 +353,19 @@ export default function SignUp() {
         submitData.semester,
         "타입:",
         typeof submitData.semester
-      );
-
-      // null 값 체크
+      ); // null 값 체크
       const nullFields = Object.entries(submitData)
         .filter(
           ([key, value]) =>
             value === null &&
-            !["double_major_type", "double_major", "modules"].includes(key)
+            ![
+              "double_major_type",
+              "double_major",
+              "modules",
+              "module1",
+              "module2",
+              "module3",
+            ].includes(key)
         )
         .map(([key]) => key);
 
@@ -510,6 +544,7 @@ export default function SignUp() {
             formData.doubleMajorType === "MINOR" ||
             formData.doubleMajorType === "INTENSIVE_MINOR") && (
             <>
+              {" "}
               <Field>
                 <Label htmlFor="doubleMajorCollege">이중/부전공 단과대학</Label>
                 <CustomSelectWrapper>
@@ -528,11 +563,14 @@ export default function SignUp() {
                         {college}
                       </option>
                     ))}
+                    {/* 이중전공 타입일 때만 융합전공 옵션 추가 */}
+                    {formData.doubleMajorType === "DOUBLE_MAJOR" && (
+                      <option value="융합전공">융합전공</option>
+                    )}
                   </Select>
                   <SelectArrow />
                 </CustomSelectWrapper>
               </Field>
-
               <Field>
                 <Label htmlFor="double_major">이중/부전공</Label>
                 <CustomSelectWrapper>
@@ -562,35 +600,90 @@ export default function SignUp() {
                 </CustomSelectWrapper>
               </Field>
             </>
-          )}
+          )}{" "}
           {formData.double_major === "융합인재학부" && (
             <Field>
-              <Label htmlFor="modules">모듈 선택</Label>
-              <CustomSelectWrapper>
-                {" "}
-                <Select
-                  id="modules"
-                  name="modules"
-                  value={formData.modules?.[0] || ""}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      modules: e.target.value ? [e.target.value] : null,
-                    }));
-                  }}
-                >
-                  {" "}
-                  <option value="" disabled>
-                    모듈을 선택하세요
-                  </option>
-                  {FUSION_MODULES.map((module) => (
-                    <option key={module} value={module}>
+              <Label htmlFor="modules">모듈 선택 (최대 3개)</Label>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                {FUSION_MODULES.map((module) => (
+                  <div
+                    key={module}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      id={`module-${module}`}
+                      checked={formData.modules?.includes(module) || false}
+                      onChange={(e) => {
+                        setFormData((prev) => {
+                          const currentModules = prev.modules || [];
+                          if (e.target.checked) {
+                            // 최대 3개까지만 선택 가능
+                            if (currentModules.length < 3) {
+                              return {
+                                ...prev,
+                                modules: [...currentModules, module],
+                              };
+                            } else {
+                              alert(
+                                "모듈은 최대 3개까지만 선택할 수 있습니다."
+                              );
+                              return prev;
+                            }
+                          } else {
+                            // 체크 해제
+                            const newModules = currentModules.filter(
+                              (m) => m !== module
+                            );
+                            return {
+                              ...prev,
+                              modules:
+                                newModules.length > 0 ? newModules : null,
+                            };
+                          }
+                        });
+                      }}
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        accentColor: "var(--brand)",
+                      }}
+                    />
+                    <label
+                      htmlFor={`module-${module}`}
+                      style={{
+                        fontSize: "var(--body-default)",
+                        cursor: "pointer",
+                        userSelect: "none",
+                      }}
+                    >
                       {module}
-                    </option>
-                  ))}
-                </Select>
-                <SelectArrow />
-              </CustomSelectWrapper>
+                    </label>
+                  </div>
+                ))}
+                {formData.modules && formData.modules.length > 0 && (
+                  <div
+                    style={{
+                      fontSize: "var(--body-small)",
+                      color: "var(--brand)",
+                      marginTop: "4px",
+                    }}
+                  >
+                    선택된 모듈: {formData.modules.join(", ")} (
+                    {formData.modules.length}/3)
+                  </div>
+                )}
+              </div>
             </Field>
           )}{" "}
           <Row>
