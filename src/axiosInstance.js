@@ -85,10 +85,12 @@ axiosInstance.interceptors.response.use(
 );
 
 // API 함수들
-export const getUserInfo = async (userId) => {
+export const getUserInfo = async (userId = null) => {
   try {
     console.log("🌐 axiosInstance - getUserInfo 호출, userId:", userId);
-    const url = `/users/${userId}/mypage`;
+
+    // userId가 없으면 토큰을 통해 현재 사용자 정보 가져오기 시도
+    const url = userId ? `/users/${userId}/mypage` : `/users/me`;
     console.log("🌐 axiosInstance - 요청 URL:", url);
 
     const response = await axiosInstance.get(url);
@@ -119,6 +121,89 @@ export const updateUserProfile = async (userId, profileData) => {
     return response.data;
   } catch (error) {
     console.error("🌐 axiosInstance - updateUserProfile 오류:", error);
+    console.error("🌐 axiosInstance - 오류 상세:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+    });
+    throw error;
+  }
+};
+
+export const saveTimePreferences = async (studentId, timePreferences) => {
+  try {
+    console.log(
+      "🌐 axiosInstance - saveTimePreferences 호출, studentId:",
+      studentId
+    );
+    console.log("🌐 axiosInstance - 전송할 시간 선호도:", timePreferences);
+    const url = `/users/${studentId}/timetable/preferences/time`;
+    console.log("🌐 axiosInstance - 요청 URL:", url);
+
+    const response = await axiosInstance.put(url, timePreferences);
+    console.log("🌐 axiosInstance - saveTimePreferences 응답:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("🌐 axiosInstance - saveTimePreferences 오류:", error);
+    console.error("🌐 axiosInstance - 오류 상세:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+    });
+    throw error;
+  }
+};
+
+export const saveCreditPreferences = async (studentId, creditSettings) => {
+  try {
+    console.log(
+      "🌐 axiosInstance - saveCreditPreferences 호출, studentId:",
+      studentId
+    );
+    console.log("🌐 axiosInstance - 전송할 학점 설정:", creditSettings);
+    const url = `/users/${studentId}/timetable/preferences/settings`;
+    console.log("🌐 axiosInstance - 요청 URL:", url);
+
+    const response = await axiosInstance.put(url, creditSettings);
+    console.log(
+      "🌐 axiosInstance - saveCreditPreferences 응답:",
+      response.data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("🌐 axiosInstance - saveCreditPreferences 오류:", error);
+    console.error("🌐 axiosInstance - 오류 상세:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method,
+    });
+    throw error;
+  }
+};
+
+export const getRecommendedTimetables = async (studentId) => {
+  try {
+    console.log(
+      "🌐 axiosInstance - getRecommendedTimetables 호출, studentId:",
+      studentId
+    );
+    const url = `/users/${studentId}/timetable/recommendations`;
+    console.log("🌐 axiosInstance - 요청 URL:", url);
+
+    const response = await axiosInstance.get(url);
+    console.log(
+      "🌐 axiosInstance - getRecommendedTimetables 응답:",
+      response.data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("🌐 axiosInstance - getRecommendedTimetables 오류:", error);
     console.error("🌐 axiosInstance - 오류 상세:", {
       status: error.response?.status,
       statusText: error.response?.statusText,
