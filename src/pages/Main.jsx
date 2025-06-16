@@ -5,6 +5,34 @@ import { useState, useEffect } from "react";
 import { getToken, getUserInfo } from "../axiosInstance";
 import Timetable from "../Components/TimeTable";
 
+// 과목별 색상 생성 함수
+const generateSubjectColors = (subjects) => {
+  const colors = [
+    "#FFE5E5",
+    "#FFF0E5",
+    "#FFFAE5",
+    "#F0FFE5",
+    "#E5F5FF",
+    "#E5E5FF",
+    "#F0E5FF",
+    "#FFE5F5",
+    "#E5FFE5",
+    "#E5FFFF",
+    "#FFFFE5",
+    "#FFE5E0",
+    "#F5E5FF",
+    "#E0E5FF",
+    "#E5F0FF",
+  ];
+
+  const subjectColors = {};
+  subjects.forEach((subject, index) => {
+    subjectColors[subject] = colors[index % colors.length];
+  });
+
+  return subjectColors;
+};
+
 const MainContainer = styled.div`
   width: 100%;
 `;
@@ -312,12 +340,18 @@ export default function Main() {
     };
 
     loadUserData();
-  }, []);
-
-  // localStorage에서 시간표 불러오기
+  }, []); // localStorage에서 시간표 불러오기
   const savedTimetable = JSON.parse(
     localStorage.getItem("finalTimetable") || "null"
   );
+  const savedTimetableName =
+    localStorage.getItem("savedTimetableName") || "나의 시간표";
+  // 저장된 시간표의 과목들로 색상 생성
+  const subjectColors = savedTimetable && Array.isArray(savedTimetable)
+    ? generateSubjectColors(
+        Array.from(new Set(savedTimetable.map((item) => item.subject)))
+      )
+    : {};
   return (
     <MainContainer>
       {loading ? (
@@ -349,11 +383,11 @@ export default function Main() {
             로그인하기
           </Button>
         </Card>
-      )}
-      {savedTimetable ? (
+      )}{" "}
+      {savedTimetable && Array.isArray(savedTimetable) && savedTimetable.length > 0 ? (
         <Card>
-          <Title>나의 시간표</Title>
-          <Timetable data={savedTimetable} />{" "}
+          <Title>{savedTimetableName}</Title>
+          <Timetable data={savedTimetable} subjectColors={subjectColors} />
           <Button
             style={{
               marginTop: 16,
@@ -363,6 +397,7 @@ export default function Main() {
             }}
             onClick={() => {
               localStorage.removeItem("finalTimetable");
+              localStorage.removeItem("savedTimetableName");
               window.location.reload();
             }}
           >
@@ -373,10 +408,10 @@ export default function Main() {
         <CenterCard onClick={(e) => e.stopPropagation()}>
           <BsExclamationCircle style={{ width: 64, height: 64 }} />
           <GuideText>
-            아직 생성된 시간표가 없어요!
+            아직 저장된 시간표가 없어요!
             <br />
-            시간표를 생성하러 가 볼까요?
-          </GuideText>{" "}
+            시간표를 생성하고 저장해보세요
+          </GuideText>
           <Button
             onClick={(e) => {
               e.stopPropagation();

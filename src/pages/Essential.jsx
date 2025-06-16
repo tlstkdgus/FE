@@ -146,6 +146,7 @@ export default function Essential() {
   const [input, setInput] = useState("");
   const [selected, setSelected] = useState(null);
   const [essentialList, setEssentialList] = useState([
+    { id: 1, name: "운영체제", desc: "AI융합전공(Software&AI) | 임승호" },
     { id: 2, name: "컴퓨터논리개론", desc: "AI융합전공(Software&AI) | 김영란" },
     { id: 3, name: "종합설계", desc: "AI융합전공(Software&AI) | 고석훈" },
     { id: 4, name: "웹프로그래밍", desc: "AI융합전공(Software&AI) | 고석훈" },

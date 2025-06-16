@@ -241,41 +241,39 @@ export default function SignUp() {
       const selectedModules =
         formData.modules && formData.modules.length > 0
           ? formData.modules.filter((m) => m && m.trim() !== "")
-          : [];
-      const submitData = {
-        studentId: formData.student_id.trim(), // 백엔드용 카멜케이스
+          : [];      const submitData = {
+        student_id: formData.student_id.trim(), // 스키마에 맞게 snake_case 사용
         password: formData.password.trim(),
         name: formData.name.trim(),
         college: formData.college.trim(),
         major: formData.major.trim(),
-        doubleMajorType:
+        double_major_type:
           formData.doubleMajorType && formData.doubleMajorType.trim() !== ""
             ? formData.doubleMajorType.trim()
             : "NONE",
-        doubleMajor: ["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(
+        double_major: ["DOUBLE_MAJOR", "MINOR", "INTENSIVE_MINOR"].includes(
           formData.doubleMajorType
         )
           ? formData.doubleMajor
             ? formData.doubleMajor.trim()
-            : null
-          : null,
-        modules: selectedModules.length > 0 ? selectedModules : null,
+            : ""
+          : "",
+        modules: selectedModules.length > 0 ? selectedModules : [],
         // 개별 모듈 필드 추가 (백엔드 요구사항)
-        module1: selectedModules[0] || null,
-        module2: selectedModules[1] || null,
-        module3: selectedModules[2] || null,
+        module1: selectedModules[0] || "통번역모듈",
+        module2: selectedModules[1] || "통번역모듈",
+        module3: selectedModules[2] || "통번역모듈",
         grade: parseInt(formData.grade) || 1,
         semester: parseInt(formData.semester) || 1,
-      }; // 데이터 검증 로깅
+      };// 데이터 검증 로깅
       console.log("📤 회원가입 데이터 전송:", submitData);
-      console.log("📋 각 필드 검증:");
-      console.log(
-        "- studentId:",
-        submitData.studentId,
+      console.log("📋 각 필드 검증:");      console.log(
+        "- student_id:",
+        submitData.student_id,
         "타입:",
-        typeof submitData.studentId,
+        typeof submitData.student_id,
         "길이:",
-        submitData.studentId?.length
+        submitData.student_id?.length
       );
       console.log(
         "- password:",
@@ -304,18 +302,17 @@ export default function SignUp() {
         submitData.major,
         "타입:",
         typeof submitData.major
+      );      console.log(
+        "- double_major_type:",
+        submitData.double_major_type,
+        "타입:",
+        typeof submitData.double_major_type
       );
       console.log(
-        "- doubleMajorType:",
-        submitData.doubleMajorType,
+        "- double_major:",
+        submitData.double_major,
         "타입:",
-        typeof submitData.doubleMajorType
-      );
-      console.log(
-        "- doubleMajor:",
-        submitData.doubleMajor,
-        "타입:",
-        typeof submitData.doubleMajor
+        typeof submitData.double_major
       );
       console.log(
         "- modules:",

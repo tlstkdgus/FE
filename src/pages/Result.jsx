@@ -723,12 +723,18 @@ export default function Result() {
       // 시간표 저장 API 호출
       await saveTimetable(userId, timetableId || 0);
 
-      // localStorage에도 저장 (기존 호환성을 위해)
-      const selectedTimetableForStorage =
-        selectedTimetable.scheduledCourses || selectedTimetable;
+      // Main.jsx에서 사용할 수 있도록 변환된 시간표 데이터를 localStorage에 저장
+      const convertedTimetableData =
+        convertApiDataToTimetableFormat(selectedTimetable);
       localStorage.setItem(
         "finalTimetable",
-        JSON.stringify(selectedTimetableForStorage)
+        JSON.stringify(convertedTimetableData)
+      );
+
+      // 시간표 이름도 함께 저장
+      localStorage.setItem(
+        "savedTimetableName",
+        selectedTimetable.name || "저장된 시간표"
       );
 
       alert("시간표가 성공적으로 저장되었습니다!");
@@ -856,22 +862,6 @@ export default function Result() {
           제안 시간표가 마음에 들지 않으시다면, <br />
           해당 과목을 클릭해 보세요
         </SubText>
-
-        <SubTitle>학점 조합</SubTitle>
-        <CreditWrapper>
-          이중/부전공{" "}
-          <CreditInput
-            value={detailedCredit.minorMax}
-            readOnly
-            style={{ width: 40, background: "#f5f5f5" }}
-          />
-          + 교양{" "}
-          <CreditInput
-            value={detailedCredit.liberalMax}
-            readOnly
-            style={{ width: 40, background: "#f5f5f5" }}
-          />
-        </CreditWrapper>
       </SubTextContainer>
       <TimetableWrapper>
         <Timetable

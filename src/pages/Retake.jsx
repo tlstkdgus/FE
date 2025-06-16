@@ -8,6 +8,18 @@ const PREV_SUBJECTS = [
   { id: 2, name: "컴퓨터논리개론", desc: "AI융합전공(Software&AI) | 김영란" },
   { id: 3, name: "종합설계", desc: "AI융합전공(Software&AI) | 고석훈" },
   { id: 4, name: "웹프로그래밍", desc: "AI융합전공(Software&AI) | 고석훈" },
+  { id: 5, name: "데이터베이스", desc: "AI융합전공(Software&AI) | 이진수" },
+  { id: 6, name: "알고리즘", desc: "AI융합전공(Software&AI) | 박민호" },
+  { id: 7, name: "프로그래밍언어론", desc: "AI융합전공(Software&AI) | 김철수" },
+  { id: 8, name: "소프트웨어공학", desc: "AI융합전공(Software&AI) | 정유진" },
+  {
+    id: 9,
+    name: "네트워크프로그래밍",
+    desc: "AI융합전공(Software&AI) | 송민재",
+  },
+  { id: 10, name: "인공지능", desc: "AI융합전공(Software&AI) | 한지민" },
+  { id: 11, name: "머신러닝", desc: "AI융합전공(Software&AI) | 최동욱" },
+  { id: 12, name: "컴퓨터구조", desc: "AI융합전공(Software&AI) | 이상현" },
 ];
 
 const Container = styled.div`

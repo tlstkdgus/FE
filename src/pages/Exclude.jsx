@@ -140,12 +140,54 @@ export default function Exclude() {
   const [input, setInput] = useState("");
   const [selected, setSelected] = useState(null);
   const [excludeList, setExcludeList] = useState([
-    { id: 1, name: "데이터베이스", desc: "AI융합전공(Software&AI) | 박교수" },
-    { id: 2, name: "자료구조", desc: "AI융합전공(Software&AI) | 최교수" },
     {
-      id: 3,
-      name: "프로그래밍언어론",
-      desc: "AI융합전공(Software&AI) | 정교수",
+      id: 1,
+      courseName: "데이터베이스",
+      department: "AI융합전공(Software&AI)",
+      professor: "손기락",
+      name: "데이터베이스",
+      desc: "AI융합전공(Software&AI) | 이진수",
+    },
+    {
+      id: 2,
+      courseName: "자료구조",
+      department: "AI융합전공(Software&AI)",
+      professor: "신찬수",
+      name: "자료구조",
+      desc: "AI융합전공(Software&AI) | 최민수",
+    },
+
+    {
+      id: 4,
+      courseName: "컴퓨터구조",
+      department: "AI융합전공(Software&AI)",
+      professor: "고석훈",
+      name: "컴퓨터구조",
+      desc: "AI융합전공(Software&AI) | 이상현",
+    },
+    {
+      id: 5,
+      courseName: "정보보안",
+      department: "AI융합전공(Software&AI)",
+      professor: "김승태",
+      name: "정보보안",
+      desc: "AI융합전공(Software&AI) | 송민재",
+    },
+    {
+      id: 6,
+      courseName: "소프트웨어공학",
+      department: "AI융합전공(Software&AI)",
+      professor: "Walid Abdullah Al",
+      name: "소프트웨어공학",
+      desc: "AI융합전공(Software&AI) | 정유진",
+    },
+    {
+      id: 7,
+      courseName: "인공지능",
+      department: "AI융합전공(Software&AI)",
+      professor: "김재빈",
+      name: "인공지능",
+      desc: "AI융합전공(Software&AI) | 한지민",
     },
   ]);
   const [searchResults, setSearchResults] = useState([]);
@@ -265,9 +307,7 @@ export default function Exclude() {
       try {
         await postCompletedReferences(userId, courseCodes);
         alert("이전 수강 과목이 성공적으로 저장되었습니다.");
-      } catch (e) {
-        alert("저장에 실패했습니다.");
-      }
+      } catch (e) {}
     }
   };
 
