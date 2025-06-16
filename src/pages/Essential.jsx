@@ -231,9 +231,11 @@ export default function Essential() {
         credits: selected.credits,
         professor: selected.professor,
       };
-
       const updatedList = [...essentialList, newCourse];
       setEssentialList(updatedList);
+
+      // localStorage에 저장 (시간표 생성용)
+      localStorage.setItem("essentialCourses", JSON.stringify(updatedList));
 
       // API에 저장 (과목 코드만 전송)
       try {

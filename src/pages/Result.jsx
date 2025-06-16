@@ -363,139 +363,86 @@ export default function Result() {
   const [showDayModal, setShowDayModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // 목 시간표 데이터 (필수과목 + 재수강과목 포함)
-  const MOCK_TIMETABLES = [
-    {
-      id: 1,
-      name: "추천 시간표 1 (필수과목 중심)",
-      courses: [
-        {
-          subject: "웹프로그래밍",
-          professor: "고석훈",
-          day: "월",
-          start: "3",
-          end: "5",
-          location: "공학관 301",
-        },
-        {
-          subject: "컴퓨터논리개론",
-          professor: "김영란",
-          day: "화",
-          start: "2",
-          end: "4",
-          location: "공학관 401",
-        },
-        {
-          subject: "종합설계",
-          professor: "고석훈",
-          day: "목",
-          start: "6",
-          end: "8",
-          location: "공학관 501",
-        },
-        {
-          subject: "운영체제",
-          professor: "임승호",
-          day: "수",
-          start: "1",
-          end: "3",
-          location: "공학관 302",
-        },
-        {
-          subject: "체육(요가)",
-          professor: "김00",
-          day: "금",
-          start: "1",
-          end: "2",
-          location: "체육관",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "추천 시간표 2 (재수강 과목 포함)",
-      courses: [
-        {
-          subject: "운영체제",
-          professor: "임승호",
-          day: "화",
-          start: "1",
-          end: "3",
-          location: "공학관 302",
-        },
-        {
-          subject: "컴퓨터논리개론",
-          professor: "김영란",
-          day: "목",
-          start: "3",
-          end: "5",
-          location: "공학관 401",
-        },
-        {
-          subject: "웹프로그래밍",
-          professor: "고석훈",
-          day: "금",
-          start: "2",
-          end: "4",
-          location: "공학관 301",
-        },
-        {
-          subject: "데이터베이스",
-          professor: "이00",
-          day: "월",
-          start: "6",
-          end: "8",
-          location: "공학관 201",
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: "추천 시간표 3 (균형잡힌 배치)",
-      courses: [
-        {
-          subject: "종합설계",
-          professor: "고석훈",
-          day: "월",
-          start: "1",
-          end: "3",
-          location: "공학관 501",
-        },
-        {
-          subject: "웹프로그래밍",
-          professor: "고석훈",
-          day: "수",
-          start: "3",
-          end: "5",
-          location: "공학관 301",
-        },
-        {
-          subject: "컴퓨터논리개론",
-          professor: "김영란",
-          day: "금",
-          start: "1",
-          end: "3",
-          location: "공학관 401",
-        },
-        {
-          subject: "알고리즘",
-          professor: "박00",
-          day: "화",
-          start: "6",
-          end: "8",
-          location: "공학관 402",
-        },
-        {
-          subject: "체육(요가)",
-          professor: "김00",
-          day: "목",
-          start: "7",
-          end: "8",
-          location: "체육관",
-        },
-      ],
-    },
-  ];
+  // Essential과 Retake에서 선택된 과목들을 기반으로 동적 시간표 생성
+  const generateDynamicTimetables = () => {
+    // localStorage에서 필수과목과 재수강과목 가져오기
+    const essentialCourses = JSON.parse(
+      localStorage.getItem("essentialCourses") || "[]"
+    );
+    const retakeCourses = JSON.parse(
+      localStorage.getItem("retakeCourses") || "[]"
+    );
+
+    // 기본 필수과목 목데이터 (localStorage가 비어있을 경우)
+    const defaultEssential = [
+      { name: "운영체제", desc: "AI융합전공(Software&AI) | 임승호" },
+      { name: "컴퓨터논리개론", desc: "AI융합전공(Software&AI) | 김영란" },
+      { name: "종합설계", desc: "AI융합전공(Software&AI) | 고석훈" },
+      { name: "웹프로그래밍", desc: "AI융합전공(Software&AI) | 고석훈" },
+    ];
+
+    // 실제 선택된 과목들 (없으면 기본값 사용)
+    const finalEssential =
+      essentialCourses.length > 0 ? essentialCourses : defaultEssential;
+    const finalRetake = retakeCourses.length > 0 ? retakeCourses : [];
+
+    // 모든 선택된 과목들을 하나의 배열로 합치기
+    const allSelectedCourses = [...finalEssential, ...finalRetake];
+
+    // 고정된 시간표 템플릿 (시간대는 절대 변경하지 않음)
+    const timeSlots = [
+      { day: "월", start: "1", end: "3", location: "공학관 302" },
+      { day: "화", start: "2", end: "4", location: "공학관 401" },
+      { day: "수", start: "3", end: "5", location: "공학관 301" },
+      { day: "목", start: "1", end: "3", location: "공학관 501" },
+      { day: "금", start: "2", end: "3", location: "체육관" },
+    ];
+
+    // 시간표 3개 생성
+    const timetables = [];
+
+    for (let i = 0; i < 3; i++) {
+      const courses = [];
+
+      // 각 시간표마다 다른 조합으로 과목 배치
+      for (
+        let j = 0;
+        j < Math.min(allSelectedCourses.length, timeSlots.length);
+        j++
+      ) {
+        const courseIndex = (i + j) % allSelectedCourses.length;
+        const course = allSelectedCourses[courseIndex];
+        const timeSlot = timeSlots[j];
+
+        // 교수명 추출 (desc에서 파싱)
+        const professor = course.desc
+          ? course.desc.split(" | ")[1] || "교수"
+          : "교수";
+
+        courses.push({
+          subject: course.name,
+          professor: professor,
+          day: timeSlot.day,
+          start: timeSlot.start,
+          end: timeSlot.end,
+          location: timeSlot.location,
+        });
+      }
+
+      timetables.push({
+        id: i + 1,
+        name: `추천 시간표 ${i + 1} (${
+          i === 0 ? "필수과목 중심" : i === 1 ? "재수강 포함" : "균형 배치"
+        })`,
+        courses: courses,
+      });
+    }
+
+    return timetables;
+  };
+
+  // 동적으로 생성된 시간표 데이터
+  const MOCK_TIMETABLES = generateDynamicTimetables();
 
   // 추천 시간표 데이터 로드
   useEffect(() => {

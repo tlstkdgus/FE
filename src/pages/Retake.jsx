@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import NavBarComponent from "../Components/NavBar";
 import { HiOutlineX } from "react-icons/hi";
@@ -163,6 +163,14 @@ export default function Retake() {
   const [selectedId, setSelectedId] = useState(null);
   const [retakeList, setRetakeList] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  // 재수강 과목 리스트가 변경될 때마다 localStorage에 자동 저장
+  useEffect(() => {
+    if (retakeList.length > 0) {
+      localStorage.setItem("retakeCourses", JSON.stringify(retakeList));
+      console.log("🔄 재수강 과목 자동 저장:", retakeList);
+    }
+  }, [retakeList]);
 
   const handleSelect = (id) => {
     setSelectedId(id);

@@ -347,11 +347,12 @@ export default function Main() {
   const savedTimetableName =
     localStorage.getItem("savedTimetableName") || "나의 시간표";
   // 저장된 시간표의 과목들로 색상 생성
-  const subjectColors = savedTimetable && Array.isArray(savedTimetable)
-    ? generateSubjectColors(
-        Array.from(new Set(savedTimetable.map((item) => item.subject)))
-      )
-    : {};
+  const subjectColors =
+    savedTimetable && Array.isArray(savedTimetable)
+      ? generateSubjectColors(
+          Array.from(new Set(savedTimetable.map((item) => item.subject)))
+        )
+      : {};
   return (
     <MainContainer>
       {loading ? (
@@ -384,7 +385,9 @@ export default function Main() {
           </Button>
         </Card>
       )}{" "}
-      {savedTimetable && Array.isArray(savedTimetable) && savedTimetable.length > 0 ? (
+      {savedTimetable &&
+      Array.isArray(savedTimetable) &&
+      savedTimetable.length > 0 ? (
         <Card>
           <Title>{savedTimetableName}</Title>
           <Timetable data={savedTimetable} subjectColors={subjectColors} />

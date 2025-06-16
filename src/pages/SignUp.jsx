@@ -241,7 +241,8 @@ export default function SignUp() {
       const selectedModules =
         formData.modules && formData.modules.length > 0
           ? formData.modules.filter((m) => m && m.trim() !== "")
-          : [];      const submitData = {
+          : [];
+      const submitData = {
         student_id: formData.student_id.trim(), // 스키마에 맞게 snake_case 사용
         password: formData.password.trim(),
         name: formData.name.trim(),
@@ -265,9 +266,10 @@ export default function SignUp() {
         module3: selectedModules[2] || "통번역모듈",
         grade: parseInt(formData.grade) || 1,
         semester: parseInt(formData.semester) || 1,
-      };// 데이터 검증 로깅
+      }; // 데이터 검증 로깅
       console.log("📤 회원가입 데이터 전송:", submitData);
-      console.log("📋 각 필드 검증:");      console.log(
+      console.log("📋 각 필드 검증:");
+      console.log(
         "- student_id:",
         submitData.student_id,
         "타입:",
@@ -302,7 +304,8 @@ export default function SignUp() {
         submitData.major,
         "타입:",
         typeof submitData.major
-      );      console.log(
+      );
+      console.log(
         "- double_major_type:",
         submitData.double_major_type,
         "타입:",
@@ -349,14 +352,16 @@ export default function SignUp() {
         submitData.semester,
         "타입:",
         typeof submitData.semester
-      ); // null 값 체크
+      );
+
+      // null 값 체크
       const nullFields = Object.entries(submitData)
         .filter(
           ([key, value]) =>
-            value === null &&
+            (value === null || value === undefined || value === "") &&
             ![
-              "doubleMajorType",
-              "doubleMajor",
+              "double_major_type",
+              "double_major",
               "modules",
               "module1",
               "module2",
