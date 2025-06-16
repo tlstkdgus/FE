@@ -172,7 +172,7 @@ export default function Credits() {
     } else {
       // 기본값 설정 (실제로는 API에서 가져와야 함)
       const defaultCredits = {
-        completed: "109",
+        completed: "0",
         total: "134",
       };
       setCredits(defaultCredits);

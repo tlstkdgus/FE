@@ -373,6 +373,10 @@ export default function Result() {
       localStorage.getItem("retakeCourses") || "[]"
     );
 
+    console.log("🔍 Result.jsx - localStorage 데이터 확인:");
+    console.log("essentialCourses:", essentialCourses);
+    console.log("retakeCourses:", retakeCourses);
+
     // 기본 필수과목 목데이터 (localStorage가 비어있을 경우)
     const defaultEssential = [
       { name: "운영체제", desc: "AI융합전공(Software&AI) | 임승호" },
@@ -384,10 +388,18 @@ export default function Result() {
     // 실제 선택된 과목들 (없으면 기본값 사용)
     const finalEssential =
       essentialCourses.length > 0 ? essentialCourses : defaultEssential;
-    const finalRetake = retakeCourses.length > 0 ? retakeCourses : [];
+    
+    // 재수강 과목은 빈 배열이면 빈 배열 그대로 사용 (기본값 없음)
+    const finalRetake = retakeCourses || [];
+
+    console.log("🎯 Result.jsx - 최종 과목 데이터:");
+    console.log("finalEssential:", finalEssential);
+    console.log("finalRetake:", finalRetake);
 
     // 모든 선택된 과목들을 하나의 배열로 합치기
     const allSelectedCourses = [...finalEssential, ...finalRetake];
+    
+    console.log("📋 Result.jsx - 모든 선택된 과목들:", allSelectedCourses);
 
     // 고정된 시간표 템플릿 (시간대는 절대 변경하지 않음)
     const timeSlots = [
@@ -414,13 +426,24 @@ export default function Result() {
         const course = allSelectedCourses[courseIndex];
         const timeSlot = timeSlots[j];
 
-        // 교수명 추출 (desc에서 파싱)
-        const professor = course.desc
-          ? course.desc.split(" | ")[1] || "교수"
-          : "교수";
+        // 교수명 추출 로직 개선
+        let professor = "교수";
+        
+        if (course.professor) {
+          // professor 필드가 있으면 직접 사용
+          professor = course.professor;
+        } else if (course.desc && course.desc.includes(" | ")) {
+          // desc에서 파싱
+          const parts = course.desc.split(" | ");
+          if (parts.length > 1 && parts[1].trim()) {
+            professor = parts[1].trim();
+          }
+        }
+        
+        console.log(`🔍 과목 ${course.name || course.courseName}: 교수명 = ${professor}`);
 
         courses.push({
-          subject: course.name,
+          subject: course.name || course.courseName,
           professor: professor,
           day: timeSlot.day,
           start: timeSlot.start,
@@ -556,6 +579,14 @@ export default function Result() {
     console.log("학점:", credit);
     console.log("상세학점:", detailedCredit);
   }, [combination, selectedDays, credit, detailedCredit]);
+
+  // localStorage 상태 확인 (임시 디버깅)
+  React.useEffect(() => {
+    console.log("🔍 Result.jsx - localStorage 전체 상태:");
+    console.log("essentialCourses:", localStorage.getItem("essentialCourses"));
+    console.log("retakeCourses:", localStorage.getItem("retakeCourses"));
+    console.log("excludeCourses:", localStorage.getItem("excludeCourses"));
+  }, []);
 
   // 로딩 중일 때 표시할 컴포넌트
   if (loading) {
@@ -694,6 +725,17 @@ export default function Result() {
     }
   };
 
+  // localStorage 완전 초기화 (임시 디버깅용)
+  const clearAllStorage = () => {
+    localStorage.removeItem("essentialCourses");
+    localStorage.removeItem("retakeCourses");
+    localStorage.removeItem("excludeCourses");
+    localStorage.removeItem("finalTimetable");
+    localStorage.removeItem("savedTimetableName");
+    console.log("🗑️ 모든 localStorage 데이터가 삭제되었습니다.");
+    window.location.reload(); // 페이지 새로고침
+  };
+
   return (
     <PageWrapper>
       <ContentWrapper>
@@ -706,10 +748,26 @@ export default function Result() {
           }}
         >
           <Title style={{ marginBottom: "0px" }}>필터링</Title>
-          <ResetButton>
-            <GrCycle style={{ width: "12px", height: "12px" }} />
-            초기화
-          </ResetButton>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <ResetButton>
+              <GrCycle style={{ width: "12px", height: "12px" }} />
+              초기화
+            </ResetButton>
+            <button
+              onClick={clearAllStorage}
+              style={{
+                padding: "8px 16px",
+                background: "#f44336",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "12px",
+                cursor: "pointer",
+              }}
+            >
+              데이터 초기화
+            </button>
+          </div>
         </TitleWrapper>
         <FilterWrapper>
           <FilterItem>

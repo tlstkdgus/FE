@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import NavBarComponent from "../Components/NavBar";
 import { HiOutlineX } from "react-icons/hi";
+import { useNavigate } from "react-router-dom";
 
 const PREV_SUBJECTS = [
   { id: 1, name: "운영체제", desc: "AI융합전공(Software&AI) | 임승호" },
@@ -18,8 +19,7 @@ const PREV_SUBJECTS = [
     desc: "AI융합전공(Software&AI) | 송민재",
   },
   { id: 10, name: "인공지능", desc: "AI융합전공(Software&AI) | 한지민" },
-  { id: 11, name: "머신러닝", desc: "AI융합전공(Software&AI) | 최동욱" },
-  { id: 12, name: "컴퓨터구조", desc: "AI융합전공(Software&AI) | 이상현" },
+  { id: 11, name: "컴퓨터구조", desc: "AI융합전공(Software&AI) | 이상현" },
 ];
 
 const Container = styled.div`
@@ -164,6 +164,7 @@ export default function Retake() {
   const [retakeList, setRetakeList] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
 
+  const navigate = useNavigate();
   // 재수강 과목 리스트가 변경될 때마다 localStorage에 자동 저장
   useEffect(() => {
     if (retakeList.length > 0) {
@@ -200,12 +201,20 @@ export default function Retake() {
 
       console.log("✅ 재수강 과목 저장 완료");
       alert("재수강 과목이 저장되었습니다!");
+      navigate("/main");
     } catch (error) {
       console.error("❌ 재수강 과목 저장 실패:", error);
       alert("저장 중 오류가 발생했습니다.");
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // localStorage 초기화 함수 (디버깅용)
+  const clearRetakeList = () => {
+    setRetakeList([]);
+    localStorage.removeItem("retakeCourses");
+    console.log("🗑️ 재수강 과목 리스트가 초기화되었습니다.");
   };
 
   return (
@@ -244,6 +253,24 @@ export default function Retake() {
           적용하기
         </Button>
         <RetakeListTitle>재수강 선택 과목 리스트</RetakeListTitle>
+        {retakeList.length > 0 && (
+          <div style={{ marginBottom: '16px', textAlign: 'right' }}>
+            <button
+              onClick={clearRetakeList}
+              style={{
+                padding: '8px 16px',
+                background: '#f44336',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              전체 삭제
+            </button>
+          </div>
+        )}
         <RetakeList>
           {retakeList.map((item, idx) => (
             <RetakeItem key={item.id}>

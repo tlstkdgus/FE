@@ -19,8 +19,9 @@ import Result from "./pages/Result";
 const RouterComponent = () => {
   return (
     <Routes>
-      <Route path="/" element={<Setting />} />
+      <Route path="/" element={<Main />} />
       <Route path="/main" element={<Main />} />
+      <Route path="/setting" element={<Setting />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/signup-complete" element={<SignUpComplete />} />

@@ -268,6 +268,18 @@ export default function Essential() {
     }
   };
 
+  // localStorage 초기화 함수 (디버깅용)
+  const clearEssentialList = () => {
+    setEssentialList([
+      { id: 1, name: "운영체제", desc: "AI융합전공(Software&AI) | 임승호" },
+      { id: 2, name: "컴퓨터논리개론", desc: "AI융합전공(Software&AI) | 김영란" },
+      { id: 3, name: "종합설계", desc: "AI융합전공(Software&AI) | 고석훈" },
+      { id: 4, name: "웹프로그래밍", desc: "AI융합전공(Software&AI) | 고석훈" },
+    ]);
+    localStorage.removeItem("essentialCourses");
+    console.log("🗑️ 필수과목 리스트가 초기화되었습니다.");
+  };
+
   return (
     <Container>
       <Inner>
@@ -314,6 +326,24 @@ export default function Essential() {
           적용하기
         </Button>
         <ListTitle>필수 과목 리스트</ListTitle>
+        {essentialList.length > 4 && (
+          <div style={{ marginBottom: '16px', textAlign: 'right' }}>
+            <button
+              onClick={clearEssentialList}
+              style={{
+                padding: '8px 16px',
+                background: '#f44336',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              목록 초기화
+            </button>
+          </div>
+        )}
         <EssentialList>
           {essentialList.map((item, idx) => (
             <EssentialItem key={idx}>
