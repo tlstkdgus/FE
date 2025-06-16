@@ -16,8 +16,6 @@ import { useSchedule } from "../context/ScheduleContext";
 import {
   getToken,
   getUserInfo,
-  saveCreditPreferences,
-  getRecommendedTimetables,
 } from "../axiosInstance";
 
 const InputContainer = styled.div`
@@ -215,44 +213,15 @@ export default function Credit() {
         minTotalCredits: totalMin,
         maxTotalCredits: totalMax,
       };
-      console.log("API 전송 데이터:", apiData);
-
-      // Context에도 저장 (기존 호환성을 위해)
+      console.log("API 전송 데이터:", apiData);      // Context에도 저장 (기존 호환성을 위해)
       setCredit({ min: totalCredits.min, max: totalCredits.max });
 
-      // API 호출
-      const savedUserData = localStorage.getItem("userData");
-      if (savedUserData) {
-        const userData = JSON.parse(savedUserData);
-        const userId =
-          userData.userId || userData.student_id || userData.studentId;
-
-        if (userId) {
-          // 1. 학점 설정 저장
-          await saveCreditPreferences(userId, apiData);
-          console.log("✅ 학점 설정이 성공적으로 저장되었습니다.");
-
-          // 2. 추천 시간표 요청
-          console.log("📋 추천 시간표를 요청하는 중...");
-          const recommendedTimetables = await getRecommendedTimetables(userId);
-          console.log(
-            "✅ 추천 시간표를 성공적으로 받았습니다:",
-            recommendedTimetables
-          );
-
-          // 3. 추천 시간표 데이터를 localStorage에 저장 (Result 페이지에서 사용)
-          localStorage.setItem(
-            "recommendedTimetables",
-            JSON.stringify(recommendedTimetables)
-          );
-
-          // 4. Result 페이지로 이동
-          navigate("/result");
-        }
-      }
-    } catch (error) {
-      console.error("학점 설정 저장 또는 추천 시간표 요청 오류:", error);
-      setError("시간표 생성에 실패했습니다. 다시 시도해주세요.");
+      // 목데이터 기반이므로 바로 결과 페이지로 이동
+      console.log("✅ 목데이터 기반으로 시간표 생성 페이지로 이동합니다.");
+      navigate("/result");    } catch (error) {
+      console.error("시간표 생성 중 오류:", error);
+      console.log("⚠️ 오류가 발생했지만 목데이터로 결과 페이지로 이동합니다.");
+      navigate("/result");
     }
   };
 
