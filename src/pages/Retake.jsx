@@ -132,24 +132,60 @@ const RemoveButton = styled.button`
   cursor: pointer;
 `;
 
+const SaveButton = styled.button`
+  width: 100%;
+  padding: 16px 0;
+  background: var(--brand);
+  color: var(--white);
+  border-radius: 12px;
+  font-size: var(--body-button-default);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 20px;
+  margin-top: 28px;
+  transition: 0.2s;
+  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
+`;
+
 export default function Retake() {
   const [selectedId, setSelectedId] = useState(null);
   const [retakeList, setRetakeList] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSelect = id => {
+  const handleSelect = (id) => {
     setSelectedId(id);
   };
 
   const handleApply = () => {
-    const subject = PREV_SUBJECTS.find(s => s.id === selectedId);
-    if (subject && !retakeList.some(s => s.id === subject.id)) {
-      setRetakeList(list => [...list, subject]);
+    const subject = PREV_SUBJECTS.find((s) => s.id === selectedId);
+    if (subject && !retakeList.some((s) => s.id === subject.id)) {
+      setRetakeList((list) => [...list, subject]);
       setSelectedId(null);
     }
   };
 
-  const handleRemove = idx => {
-    setRetakeList(list => list.filter((_, i) => i !== idx));
+  const handleRemove = (idx) => {
+    setRetakeList((list) => list.filter((_, i) => i !== idx));
+  };
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      console.log("📋 재수강 과목 저장 시작:", retakeList);
+
+      // 목데이터 기반이므로 임시 userId 사용
+      const userId = 1;
+
+      // 재수강 과목 데이터를 localStorage에 저장 (목데이터 시뮬레이션)
+      localStorage.setItem("retakeCourses", JSON.stringify(retakeList));
+
+      console.log("✅ 재수강 과목 저장 완료");
+      alert("재수강 과목이 저장되었습니다!");
+    } catch (error) {
+      console.error("❌ 재수강 과목 저장 실패:", error);
+      alert("저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -157,19 +193,22 @@ export default function Retake() {
       <Inner>
         <Label>재수강 과목 설정</Label>
         <Description>
-          수강한 과목 중 재수강할 과목의<br />
+          수강한 과목 중 재수강할 과목의
+          <br />
           학수 번호를 입력해 주세요
         </Description>
         <Notice>
           주의사항 :<br />
-          수강한 과목 제외 페이지에서 제외하지 않은 과목은<br />
-          아래 리스트에서 확인할 수 없으며,<br />
+          수강한 과목 제외 페이지에서 제외하지 않은 과목은
+          <br />
+          아래 리스트에서 확인할 수 없으며,
+          <br />
           선택한 과목들은 시간표 생성 시 우선 반영됩니다
         </Notice>
         <ListTitle>이전 수강 과목 리스트</ListTitle>
         <PrevListBox>
           <PrevList>
-            {PREV_SUBJECTS.map(item => (
+            {PREV_SUBJECTS.map((item) => (
               <PrevItem
                 key={item.id}
                 selected={selectedId === item.id}
@@ -198,6 +237,12 @@ export default function Retake() {
             </RetakeItem>
           ))}
         </RetakeList>
+        <SaveButton
+          disabled={retakeList.length === 0 || isSaving}
+          onClick={handleSave}
+        >
+          {isSaving ? "저장 중..." : "저장하기"}
+        </SaveButton>
       </Inner>
       <NavBarComponent />
     </Container>

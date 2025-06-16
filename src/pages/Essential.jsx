@@ -3,12 +3,7 @@ import styled from "styled-components";
 import { HiOutlineX } from "react-icons/hi";
 import NavBarComponent from "../Components/NavBar";
 import { useNavigate } from "react-router-dom";
-
-const SUBJECTS = {
-  V41009201: { name: "운영체제", desc: "AI 융합전공 | 교수명" },
-  T07201201: { name: "컴퓨터 구조", desc: "AI 융합전공 | 교수명" },
-  T07403201: { name: "종합설계", desc: "AI 융합전공 | 교수명" },
-};
+import { searchCourses, saveEssentialCourses } from "../axiosInstance";
 
 const Container = styled.div`
   width: 100%;
@@ -124,34 +119,150 @@ const RemoveButton = styled.button`
   cursor: pointer;
 `;
 
+const SearchResults = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+`;
+
+const SearchResultItem = styled.div`
+  background: ${(props) =>
+    props.$isSelected ? "var(--subcolor)" : "var(--white)"};
+  border: 1.5px solid
+    ${(props) => (props.$isSelected ? "var(--brand)" : "var(--gray)")};
+  border-radius: 12px;
+  padding: 14px 12px;
+  cursor: pointer;
+  transition: 0.2s;
+
+  &:hover {
+    border-color: var(--brand);
+  }
+`;
+
 export default function Essential() {
   const navigate = useNavigate();
   const [input, setInput] = useState("");
   const [selected, setSelected] = useState(null);
   const [essentialList, setEssentialList] = useState([
-    { name: "운영체제", desc: "AI융합전공(Software&AI) | 임승호" },
-    { name: "웹프로그래밍", desc: "AI융합전공(Software&AI) | 고석훈" },
-    { name: "컴퓨터논리개론", desc: "AI융합전공(Software&AI) | 김영란" },
+    { id: 2, name: "컴퓨터논리개론", desc: "AI융합전공(Software&AI) | 김영란" },
+    { id: 3, name: "종합설계", desc: "AI융합전공(Software&AI) | 고석훈" },
+    { id: 4, name: "웹프로그래밍", desc: "AI융합전공(Software&AI) | 고석훈" },
   ]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const fetchCourse = React.useCallback(async (trimmed) => {
+    if (!trimmed) {
+      setSelected(null);
+      setSearchResults([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await searchCourses(trimmed);
+      if (response && response.courses) {
+        setSearchResults(response.courses);
+      } else {
+        setSearchResults([]);
+      }
+      setSelected(null);
+    } catch (e) {
+      console.error("과목 검색 오류:", e);
+      setSelected(null);
+      setSearchResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
-    if (SUBJECTS[input.trim()]) {
-      setSelected(SUBJECTS[input.trim()]);
-    } else {
-      setSelected(null);
-    }
-  }, [input]);
+    const trimmed = input.trim();
 
-  const handleApply = () => {
+    if (!trimmed) {
+      fetchCourse(trimmed);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetchCourse(trimmed);
+    }, 500);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [input, fetchCourse]);
+  const handleSelectCourse = (course) => {
+    setSelected({
+      courseCode: course.courseCode,
+      courseName: course.courseName,
+      department: course.department,
+      credits: course.credits,
+      professor: course.professor,
+      // 기존 UI 호환성을 위한 매핑
+      name: course.courseName,
+      desc: `${course.department} | ${course.professor}`,
+      code: course.courseCode,
+    });
+    setSearchResults([]);
+  };
+  const handleApply = async () => {
     if (selected) {
-      setEssentialList((list) => [...list, selected]);
+      // 중복 방지 검사
+      const isDuplicate = essentialList.some(
+        (course) => course.courseCode === selected.courseCode
+      );
+
+      if (isDuplicate) {
+        alert("이미 추가된 과목입니다.");
+        return;
+      }
+
+      const newCourse = {
+        name: selected.name,
+        desc: selected.desc,
+        code: selected.code,
+        courseCode: selected.courseCode,
+        courseName: selected.courseName,
+        department: selected.department,
+        credits: selected.credits,
+        professor: selected.professor,
+      };
+
+      const updatedList = [...essentialList, newCourse];
+      setEssentialList(updatedList);
+
+      // API에 저장 (과목 코드만 전송)
+      try {
+        const userData = localStorage.getItem("userData");
+        const userId = userData ? JSON.parse(userData).userId : null;
+
+        const courseCodes = updatedList.map((course) => course.courseCode);
+        await saveEssentialCourses(userId, courseCodes);
+      } catch (error) {
+        console.error("필수 과목 저장 오류:", error);
+      }
+
       setInput("");
       setSelected(null);
     }
   };
+  const handleRemove = async (idx) => {
+    const updatedList = essentialList.filter((_, i) => i !== idx);
+    setEssentialList(updatedList);
 
-  const handleRemove = (idx) => {
-    setEssentialList((list) => list.filter((_, i) => i !== idx));
+    // API에 업데이트된 목록 저장 (과목 코드만 전송)
+    try {
+      const userData = localStorage.getItem("userData");
+      const userId = userData ? JSON.parse(userData).userId : null;
+
+      const courseCodes = updatedList.map((course) => course.courseCode);
+      await saveEssentialCourses(userId, courseCodes);
+    } catch (error) {
+      console.error("필수 과목 업데이트 오류:", error);
+    }
   };
 
   return (
@@ -168,12 +279,28 @@ export default function Essential() {
           본인이 듣고자 하는 최대 학점을 초과한 필수 과목 설정이
           <br />
           불가능하며, 선택한 과목들은 시간표 생성 시 우선 반영됩니다
-        </Notice>
+        </Notice>{" "}
         <Input
           placeholder="학수 번호를 입력해 주세요"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
+        {/* 검색 결과 표시 */}
+        {searchResults.length > 0 && (
+          <SearchResults>
+            {searchResults.map((course, index) => (
+              <SearchResultItem
+                key={`${course.courseCode}-${index}`}
+                onClick={() => handleSelectCourse(course)}
+              >
+                <div>{course.courseName}</div>
+                <SubText>
+                  {course.department} | {course.professor}
+                </SubText>
+              </SearchResultItem>
+            ))}
+          </SearchResults>
+        )}
         {selected && (
           <SelectedBox>
             <div>{selected.name}</div>

@@ -13,6 +13,7 @@ import { GrCycle } from "react-icons/gr";
 import { IoMdArrowDropdown } from "react-icons/io";
 import Timetable from "../Components/TimeTable";
 import { useSchedule } from "../context/ScheduleContext";
+import { saveTimetable } from "../axiosInstance";
 
 const ResetButton = styled.div`
   display: flex;
@@ -350,6 +351,7 @@ export default function Result() {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [timetableList, setTimetableList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const {
     combination,
     setCombination,
@@ -361,58 +363,19 @@ export default function Result() {
   const [showDayModal, setShowDayModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // 추천 시간표 데이터 로드
-  useEffect(() => {
-    const loadRecommendedTimetables = () => {
-      try {
-        const savedTimetables = localStorage.getItem("recommendedTimetables");
-        if (savedTimetables) {
-          const parsedTimetables = JSON.parse(savedTimetables);
-          console.log("✅ Result.jsx - 저장된 추천 시간표:", parsedTimetables);
-
-          // API 응답 형식에 따라 데이터 처리
-          if (
-            parsedTimetables.timetables &&
-            Array.isArray(parsedTimetables.timetables)
-          ) {
-            setTimetableList(parsedTimetables.timetables);
-          } else if (Array.isArray(parsedTimetables)) {
-            setTimetableList(parsedTimetables);
-          } else {
-            console.warn(
-              "⚠️ Result.jsx - 예상되지 않은 시간표 데이터 형식:",
-              parsedTimetables
-            );
-            // 기본 예시 데이터 사용
-            setTimetableList(getDefaultTimetables());
-          }
-        } else {
-          console.warn(
-            "⚠️ Result.jsx - 저장된 추천 시간표가 없습니다. 기본 데이터를 사용합니다."
-          );
-          setTimetableList(getDefaultTimetables());
-        }
-      } catch (error) {
-        console.error("❌ Result.jsx - 추천 시간표 로드 오류:", error);
-        setTimetableList(getDefaultTimetables());
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadRecommendedTimetables();
-  }, []);
-
-  // 기본 예시 시간표 데이터
-  const getDefaultTimetables = () => {
-    return [
-      [
+  // 목 시간표 데이터
+  const MOCK_TIMETABLES = [
+    {
+      id: 1,
+      name: "추천 시간표 1",
+      courses: [
         {
           subject: "웹 프로그래밍",
           professor: "김00",
           day: "월",
           start: "3",
           end: "5",
+          location: "공학관 301",
         },
         {
           subject: "체육(요가)",
@@ -420,6 +383,7 @@ export default function Result() {
           day: "화",
           start: "2",
           end: "3",
+          location: "체육관",
         },
         {
           subject: "컴퓨터 논리 개론",
@@ -427,34 +391,135 @@ export default function Result() {
           day: "목",
           start: "6",
           end: "7",
+          location: "공학관 401",
+        },
+        {
+          subject: "운영체제",
+          professor: "임승호",
+          day: "수",
+          start: "1",
+          end: "3",
+          location: "공학관 302",
         },
       ],
-      [
+    },
+    {
+      id: 2,
+      name: "추천 시간표 2",
+      courses: [
         {
-          subject: "컴퓨터 수학",
+          subject: "웹 프로그래밍",
           professor: "김00",
           day: "화",
-          start: "5",
-          end: "7",
+          start: "1",
+          end: "3",
+          location: "공학관 301",
         },
         {
-          subject: "알고리즘",
+          subject: "컴퓨터 논리 개론",
           professor: "김00",
-          day: "수",
-          start: "4",
-          end: "6",
+          day: "목",
+          start: "3",
+          end: "4",
+          location: "공학관 401",
+        },
+        {
+          subject: "종합설계",
+          professor: "고석훈",
+          day: "금",
+          start: "2",
+          end: "4",
+          location: "공학관 501",
+        },
+        {
+          subject: "운영체제",
+          professor: "임승호",
+          day: "월",
+          start: "6",
+          end: "8",
+          location: "공학관 302",
         },
       ],
-      [
+    },
+    {
+      id: 3,
+      name: "추천 시간표 3",
+      courses: [
         {
-          subject: "데이터베이스",
+          subject: "체육(요가)",
           professor: "김00",
           day: "월",
           start: "1",
-          end: "3",
+          end: "2",
+          location: "체육관",
+        },
+        {
+          subject: "웹 프로그래밍",
+          professor: "김00",
+          day: "수",
+          start: "3",
+          end: "5",
+          location: "공학관 301",
+        },
+        {
+          subject: "컴퓨터 논리 개론",
+          professor: "김00",
+          day: "금",
+          start: "1",
+          end: "2",
+          location: "공학관 401",
+        },
+        {
+          subject: "종합설계",
+          professor: "고석훈",
+          day: "화",
+          start: "6",
+          end: "8",
+          location: "공학관 501",
         },
       ],
-    ];
+    },
+  ];
+
+  // 추천 시간표 데이터 로드
+  useEffect(() => {
+    const loadRecommendedTimetables = () => {
+      try {
+        // 목 데이터를 즉시 설정
+        console.log("✅ Result.jsx - 목 시간표 데이터 로드:", MOCK_TIMETABLES);
+        setTimetableList(MOCK_TIMETABLES);
+        setLoading(false);
+      } catch (error) {
+        console.error("❌ Result.jsx - 추천 시간표 로드 오류:", error);
+        setTimetableList([]);
+        setLoading(false);
+      }
+    };
+
+    loadRecommendedTimetables();
+  }, []);
+
+  // API 응답 데이터를 TimeTable 컴포넌트에서 사용할 수 있는 형식으로 변환
+  const convertApiDataToTimetableFormat = (apiData) => {
+    if (!apiData || !apiData.scheduledCourses) {
+      return [];
+    }
+
+    return apiData.scheduledCourses.flatMap((course) => {
+      return course.actualClassTimes.flatMap((classTime) => {
+        return classTime.교시들.map((period) => ({
+          subject: course.courseName,
+          professor: course.professor,
+          day: classTime.요일,
+          start: period.toString(),
+          end: period.toString(),
+          courseCode: course.courseCode,
+          credits: course.credits,
+          classroom: course.classroom,
+          department: course.department,
+        }));
+      });
+    });
   };
 
   // (예시) 현재 선택된 조건을 콘솔에 출력
@@ -482,7 +547,16 @@ export default function Result() {
   // 시간표에 있는 모든 과목을 추출하여 중복 제거
   const allSubjects = Array.from(
     new Set(
-      timetableList.flatMap((schedule) => schedule.map((item) => item.subject))
+      timetableList.flatMap((timetable) => {
+        if (timetable.scheduledCourses) {
+          // API 응답 형식인 경우
+          return timetable.scheduledCourses.map((course) => course.courseName);
+        } else if (Array.isArray(timetable)) {
+          // 기존 형식인 경우
+          return timetable.map((item) => item.subject);
+        }
+        return [];
+      })
     )
   );
 
@@ -511,6 +585,68 @@ export default function Result() {
       </PageWrapper>
     );
   }
+
+  // 시간표 저장 함수
+  const handleSaveTimetable = async () => {
+    try {
+      setSaving(true);
+
+      // localStorage에서 사용자 정보 가져오기
+      const savedUserData = localStorage.getItem("userData");
+      if (!savedUserData) {
+        alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
+        navigate("/login");
+        return;
+      }
+
+      const userData = JSON.parse(savedUserData);
+      const userId =
+        userData.userId || userData.student_id || userData.studentId;
+
+      if (!userId) {
+        alert("사용자 ID를 찾을 수 없습니다.");
+        return;
+      }
+
+      // 현재 선택된 시간표 가져오기
+      const selectedTimetable = timetableList[selectedIdx];
+      if (!selectedTimetable) {
+        alert("선택된 시간표가 없습니다.");
+        return;
+      }
+
+      // timetableId 확인
+      const timetableId = selectedTimetable.timetableId;
+      if (timetableId === undefined || timetableId === null) {
+        console.warn("⚠️ timetableId가 없습니다. 0으로 설정합니다.");
+      }
+
+      console.log("💾 시간표 저장 중...", {
+        userId,
+        timetableId: timetableId || 0,
+        selectedTimetable,
+      });
+
+      // 시간표 저장 API 호출
+      await saveTimetable(userId, timetableId || 0);
+
+      // localStorage에도 저장 (기존 호환성을 위해)
+      const selectedTimetableForStorage =
+        selectedTimetable.scheduledCourses || selectedTimetable;
+      localStorage.setItem(
+        "finalTimetable",
+        JSON.stringify(selectedTimetableForStorage)
+      );
+
+      alert("시간표가 성공적으로 저장되었습니다!");
+      navigate("/main");
+    } catch (error) {
+      console.error("❌ 시간표 저장 오류:", error);
+      alert("시간표 저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <PageWrapper>
@@ -613,7 +749,9 @@ export default function Result() {
             </DropdownWrapper>
           </FilterItem>
           <FilterItem>
-            <NextButton>시간표 다시 만들기</NextButton>
+            <NextButton onClick={handleSaveTimetable}>
+              {saving ? "저장 중..." : "시간표 저장하기"}
+            </NextButton>
           </FilterItem>
         </FilterWrapper>
       </ContentWrapper>
@@ -644,7 +782,9 @@ export default function Result() {
       </SubTextContainer>
       <TimetableWrapper>
         <Timetable
-          data={timetableList[selectedIdx] || []}
+          data={
+            convertApiDataToTimetableFormat(timetableList[selectedIdx]) || []
+          }
           subjectColors={subjectColors}
         />
       </TimetableWrapper>
@@ -652,24 +792,15 @@ export default function Result() {
         {timetableList.map((miniData, idx) => (
           <MiniTimetable
             key={idx}
-            data={miniData}
+            data={convertApiDataToTimetableFormat(miniData) || []}
             isSelected={selectedIdx === idx}
             onClick={() => setSelectedIdx(idx)}
             subjectColors={subjectColors}
           />
         ))}
       </SubtableWrapper>
-      <NextButton
-        onClick={() => {
-          const selectedTimetable = timetableList[selectedIdx] || [];
-          localStorage.setItem(
-            "finalTimetable",
-            JSON.stringify(selectedTimetable)
-          );
-          navigate("/main");
-        }}
-      >
-        저장하기
+      <NextButton onClick={handleSaveTimetable} disabled={saving}>
+        {saving ? "저장 중..." : "저장하기"}
       </NextButton>
     </PageWrapper>
   );
