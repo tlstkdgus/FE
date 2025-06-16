@@ -558,25 +558,42 @@ export default function Result() {
 
   // API 응답 데이터를 TimeTable 컴포넌트에서 사용할 수 있는 형식으로 변환
   const convertApiDataToTimetableFormat = (apiData) => {
-    if (!apiData || !apiData.scheduledCourses) {
+    if (!apiData) {
       return [];
     }
 
-    return apiData.scheduledCourses.flatMap((course) => {
-      return course.actualClassTimes.flatMap((classTime) => {
-        return classTime.교시들.map((period) => ({
-          subject: course.courseName,
-          professor: course.professor,
-          day: classTime.요일,
-          start: period.toString(),
-          end: period.toString(),
-          courseCode: course.courseCode,
-          credits: course.credits,
-          classroom: course.classroom,
-          department: course.department,
-        }));
+    // 목데이터 형식 처리 (courses 배열)
+    if (apiData.courses && Array.isArray(apiData.courses)) {
+      return apiData.courses.map((course) => ({
+        subject: course.subject,
+        professor: course.professor,
+        day: course.day,
+        start: course.start,
+        end: course.end,
+        location: course.location,
+      }));
+    }
+
+    // API 응답 형식 처리 (scheduledCourses 배열)
+    if (apiData.scheduledCourses) {
+      return apiData.scheduledCourses.flatMap((course) => {
+        return course.actualClassTimes.flatMap((classTime) => {
+          return classTime.교시들.map((period) => ({
+            subject: course.courseName,
+            professor: course.professor,
+            day: classTime.요일,
+            start: period.toString(),
+            end: period.toString(),
+            courseCode: course.courseCode,
+            credits: course.credits,
+            classroom: course.classroom,
+            department: course.department,
+          }));
+        });
       });
-    });
+    }
+
+    return [];
   };
 
   // (예시) 현재 선택된 조건을 콘솔에 출력
@@ -608,6 +625,9 @@ export default function Result() {
         if (timetable.scheduledCourses) {
           // API 응답 형식인 경우
           return timetable.scheduledCourses.map((course) => course.courseName);
+        } else if (timetable.courses && Array.isArray(timetable.courses)) {
+          // 목데이터 형식인 경우
+          return timetable.courses.map((course) => course.subject);
         } else if (Array.isArray(timetable)) {
           // 기존 형식인 경우
           return timetable.map((item) => item.subject);
@@ -619,6 +639,13 @@ export default function Result() {
 
   // 모든 시간표에서 사용할 일관된 과목 색상 생성
   const subjectColors = generateSubjectColors(allSubjects);
+  
+  // 디버깅: 시간표 데이터 확인
+  console.log("🔍 Result.jsx 디버깅:");
+  console.log("timetableList:", timetableList);
+  console.log("selectedIdx:", selectedIdx);
+  console.log("allSubjects:", allSubjects);
+  console.log("convertApiDataToTimetableFormat 결과:", convertApiDataToTimetableFormat(timetableList[selectedIdx]));
 
   // 최소/최대 학점 기본값 처리
   const minCredit =
