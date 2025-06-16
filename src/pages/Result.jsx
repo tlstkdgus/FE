@@ -503,51 +503,57 @@ export default function Result() {
       try {
         // 목 데이터를 즉시 설정 - 실패해도 안전하게 처리
         console.log("✅ Result.jsx - 목 시간표 데이터 로드 시작");
-        
+
         // MOCK_TIMETABLES가 없거나 비어있을 경우를 대비한 안전장치
         if (MOCK_TIMETABLES && MOCK_TIMETABLES.length > 0) {
           console.log("✅ 목 시간표 데이터:", MOCK_TIMETABLES);
           setTimetableList(MOCK_TIMETABLES);
         } else {
-          console.warn("⚠️ 목 시간표 데이터가 없어서 기본 시간표를 생성합니다.");
+          console.warn(
+            "⚠️ 목 시간표 데이터가 없어서 기본 시간표를 생성합니다."
+          );
           // 기본 시간표 생성
-          const defaultTimetable = [{
-            id: 1,
-            name: "기본 시간표",
-            courses: [
-              {
-                subject: "기본 과목",
-                professor: "교수명",
-                day: "월",
-                start: "1",
-                end: "2",
-                location: "강의실",
-              }
-            ]
-          }];
+          const defaultTimetable = [
+            {
+              id: 1,
+              name: "기본 시간표",
+              courses: [
+                {
+                  subject: "기본 과목",
+                  professor: "교수명",
+                  day: "월",
+                  start: "1",
+                  end: "2",
+                  location: "강의실",
+                },
+              ],
+            },
+          ];
           setTimetableList(defaultTimetable);
         }
-        
+
         setLoading(false);
       } catch (error) {
         console.error("❌ Result.jsx - 추천 시간표 로드 오류:", error);
-        
+
         // 에러 발생 시에도 기본 시간표 제공
-        const fallbackTimetable = [{
-          id: 1,
-          name: "시간표 생성 실패 - 기본값",
-          courses: [
-            {
-              subject: "시간표 생성에 실패했습니다",
-              professor: "설정을 다시 확인해주세요",
-              day: "월",
-              start: "1",
-              end: "1",
-              location: "",
-            }
-          ]
-        }];
-        
+        const fallbackTimetable = [
+          {
+            id: 1,
+            name: "시간표 생성 실패 - 기본값",
+            courses: [
+              {
+                subject: "시간표 생성에 실패했습니다",
+                professor: "설정을 다시 확인해주세요",
+                day: "월",
+                start: "1",
+                end: "1",
+                location: "",
+              },
+            ],
+          },
+        ];
+
         setTimetableList(fallbackTimetable);
         setLoading(false);
       }
@@ -639,13 +645,16 @@ export default function Result() {
 
   // 모든 시간표에서 사용할 일관된 과목 색상 생성
   const subjectColors = generateSubjectColors(allSubjects);
-  
+
   // 디버깅: 시간표 데이터 확인
   console.log("🔍 Result.jsx 디버깅:");
   console.log("timetableList:", timetableList);
   console.log("selectedIdx:", selectedIdx);
   console.log("allSubjects:", allSubjects);
-  console.log("convertApiDataToTimetableFormat 결과:", convertApiDataToTimetableFormat(timetableList[selectedIdx]));
+  console.log(
+    "convertApiDataToTimetableFormat 결과:",
+    convertApiDataToTimetableFormat(timetableList[selectedIdx])
+  );
 
   // 최소/최대 학점 기본값 처리
   const minCredit =
@@ -656,12 +665,14 @@ export default function Result() {
   // 시간표가 없을 때 처리 - 완전히 막지 말고 안내 메시지와 함께 빈 시간표 제공
   if (!timetableList || timetableList.length === 0) {
     // 빈 시간표라도 표시할 수 있도록 기본값 설정
-    const emptyTimetable = [{
-      id: 1,
-      name: "시간표가 생성되지 않았습니다",
-      courses: []
-    }];
-    
+    const emptyTimetable = [
+      {
+        id: 1,
+        name: "시간표가 생성되지 않았습니다",
+        courses: [],
+      },
+    ];
+
     // 빈 시간표로 설정하고 계속 진행
     if (!timetableList) {
       setTimetableList(emptyTimetable);

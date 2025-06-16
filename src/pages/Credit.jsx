@@ -13,10 +13,7 @@ import {
 } from "../Components/CreateComponent";
 import { useNavigate } from "react-router-dom";
 import { useSchedule } from "../context/ScheduleContext";
-import {
-  getToken,
-  getUserInfo,
-} from "../axiosInstance";
+import { getToken, getUserInfo } from "../axiosInstance";
 
 const InputContainer = styled.div`
   display: flex;
@@ -190,7 +187,8 @@ export default function Credit() {
       }
 
       const totalMin = parseInt(totalCredits.min) || 0;
-      const totalMax = parseInt(totalCredits.max) || 0;      if (totalMin < 4) {
+      const totalMax = parseInt(totalCredits.max) || 0;
+      if (totalMin < 4) {
         setError("총 최소 학점은 4학점 이상이어야 합니다.");
         return;
       }
@@ -201,7 +199,6 @@ export default function Credit() {
       // 목데이터 기반이므로 바로 결과 페이지로 이동
       console.log("✅ 목데이터 기반으로 시간표 생성 페이지로 이동합니다.");
       navigate("/result");
-
     } catch (error) {
       console.error("시간표 생성 중 오류:", error);
       console.log("⚠️ 오류가 발생했지만 목데이터로 결과 페이지로 이동합니다.");
