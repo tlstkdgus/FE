@@ -190,35 +190,19 @@ export default function Credit() {
       }
 
       const totalMin = parseInt(totalCredits.min) || 0;
-      const totalMax = parseInt(totalCredits.max) || 0;
-
-      if (totalMin < 4) {
+      const totalMax = parseInt(totalCredits.max) || 0;      if (totalMin < 4) {
         setError("총 최소 학점은 4학점 이상이어야 합니다.");
         return;
       }
 
-      // API 형식에 맞게 데이터 준비
-      const creditGoalsPerType = {};
-      courseTypes.forEach((type) => {
-        const min = parseInt(creditSettings[type].min) || 0;
-        const max = parseInt(creditSettings[type].max) || 0;
-        if (min > 0 || max > 0) {
-          creditGoalsPerType[type] = { min, max };
-        }
-      });
-
-      const apiData = {
-        creditGoalsPerType,
-        courseTypeCombination: courseTypes,
-        minTotalCredits: totalMin,
-        maxTotalCredits: totalMax,
-      };
-      console.log("API 전송 데이터:", apiData);      // Context에도 저장 (기존 호환성을 위해)
+      // Context에 저장
       setCredit({ min: totalCredits.min, max: totalCredits.max });
 
       // 목데이터 기반이므로 바로 결과 페이지로 이동
       console.log("✅ 목데이터 기반으로 시간표 생성 페이지로 이동합니다.");
-      navigate("/result");    } catch (error) {
+      navigate("/result");
+
+    } catch (error) {
       console.error("시간표 생성 중 오류:", error);
       console.log("⚠️ 오류가 발생했지만 목데이터로 결과 페이지로 이동합니다.");
       navigate("/result");
